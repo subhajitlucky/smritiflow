@@ -20,9 +20,10 @@ SmritiFlow is published as the `smritiflow` CLI package.
 npm install -g smritiflow
 ```
 
-You can also run it without a global install:
+You can also install it in a project and run it locally:
 
 ```bash
+npm install --save-dev smritiflow
 npx smritiflow <command>
 ```
 
