@@ -3,7 +3,11 @@
   "version": "0.1.0",
   "type": "module",
   "bin": {
-    "smritiflow": "dist/index.js"
+    "smritiflow": "bin/smritiflow.js",
+    "sf": "bin/smritiflow.js"
+  },
+  "dependencies": {
+    "tsx": "^4.21.0"
   },
   "scripts": {
     "dev": "tsx src/index.ts",

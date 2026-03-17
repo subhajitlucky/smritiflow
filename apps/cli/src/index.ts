@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import path from "node:path";
 
 type CoreAction = (cwd: string) => Promise<void>;
 
@@ -35,9 +36,10 @@ async function run(modulePath: string, exportName: string): Promise<void> {
 }
 
 const program = new Command();
+const invokedCommand = path.basename(process.argv[1] ?? "smritiflow");
 
 program
-  .name("smritiflow")
+  .name(invokedCommand === "sf" ? "sf" : "smritiflow")
   .description("Living project memory for coding agents")
   .version("0.1.0");
 

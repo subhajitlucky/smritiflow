@@ -10,6 +10,7 @@ SmritiFlow keeps living repo memory for coding agents.
 2. docs/ai/CURRENT_STATE.md
 3. docs/ai/RUNBOOK.md
 4. .smritiflow/scan-report.json
+5. .agents/skills/smritiflow/SKILL.md
 
 ## Important Commands
 - pnpm build

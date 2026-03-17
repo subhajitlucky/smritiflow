@@ -23,8 +23,8 @@ Living project memory for coding agents.
 - docs: documentation and memory artifacts
 
 ## Architecture Summary
-- Internal source files: 40
-- Internal import edges: 87
+- Internal source files: 42
+- Internal import edges: 89
 
 ### Route Surface
 - no routes detected
@@ -45,6 +45,6 @@ Living project memory for coding agents.
 - vitest.config.ts
 
 ## Current Maturity
-- Last scan: 2026-03-17T07:18:46.716Z
-- Files scanned: 53
+- Last scan: 2026-03-17T07:28:58.294Z
+- Files scanned: 55
 - Branch: main

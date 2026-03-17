@@ -58,8 +58,8 @@
   ],
   "routes": [],
   "moduleGraph": {
-    "nodes": 40,
-    "edges": 87,
+    "nodes": 42,
+    "edges": 89,
     "hotspots": [
       "packages/core/src/runRefresh.ts (22)",
       "packages/core/src/runScan.ts (22)",
