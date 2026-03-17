@@ -4,7 +4,7 @@
 - `pnpm install`
 
 ## Dev
-- pnpm --filter @smritiflow/cli dev
+- pnpm --filter ./apps/cli dev
 
 ## Test
 - vitest run
@@ -20,7 +20,7 @@
 
 ## Common Scripts
 - build: pnpm -r build
-- dev: pnpm --filter @smritiflow/cli dev
+- dev: pnpm --filter ./apps/cli dev
 - lint: pnpm typecheck
 - typecheck: tsc -p tsconfig.json --noEmit
 - test: vitest run

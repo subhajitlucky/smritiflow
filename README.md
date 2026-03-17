@@ -1,23 +1,8 @@
 # SmritiFlow
 
-Living project memory for coding agents.
+SmritiFlow is a CLI for maintaining living repository memory for coding agents. It scans a codebase, writes structured artifacts, and generates concise agent-facing docs so work can be resumed with current context instead of guesswork.
 
-SmritiFlow is a CLI-first tool that scans a repository, builds structured memory artifacts, and generates agent-friendly markdown files so work can be resumed quickly with current context.
-
-## Core Commands
-
-- `pnpm dev init`: Initialize `.smritiflow/` and `docs/ai/` artifacts.
-- `pnpm dev scan`: Run a full scan and regenerate machine + markdown memory.
-- `pnpm dev refresh`: Refresh memory after code changes.
-- `pnpm dev status`: Show freshness/staleness signals.
-- `pnpm dev resume`: Print a focused resume brief for next session.
-
-Installed CLI command names:
-
-- `smritiflow init|scan|refresh|status|resume`
-- `sf init|scan|refresh|status|resume`
-
-## Generated Outputs
+## What It Generates
 
 - `.smritiflow/cache.json`
 - `.smritiflow/project-map.json`
@@ -27,129 +12,86 @@ Installed CLI command names:
 - `docs/ai/CURRENT_STATE.md`
 - `docs/ai/RUNBOOK.md`
 
-## Development
+## Install
 
-- `pnpm typecheck`: Workspace-wide TypeScript checks.
-- `pnpm test`: Unit + integration test suite (Vitest).
-- `pnpm build`: Build CLI package.
-- `pnpm validate`: Full validation (`typecheck`, `test`, `build`).
+SmritiFlow is published as the `smritiflow` CLI package.
 
-## pnpm vs npm
+```bash
+npm install -g smritiflow
+```
 
-- We use `pnpm` in this repository because it is fast and works well for monorepos.
-- That does not lock users to `pnpm`.
-- SmritiFlow is a normal Node CLI package, so npm users can run it too.
+You can also run it without a global install:
 
-Important install command note:
+```bash
+npx smritiflow <command>
+```
 
-- This repo publishes the CLI as `smritiflow`.
-- Global install command is: `npm install -g smritiflow`.
-- Project-local usage also works via `npx smritiflow <command>`.
+Both command names are supported:
 
-## How People Can Use SmritiFlow
+- `smritiflow`
+- `sf`
 
-Option 1: Published package (best for teams)
+## Quick Start
 
-1. Publish `smritiflow` to npm.
-2. Users run `npm install -g smritiflow`.
-3. Then they can run `smritiflow init` or `sf init` in any project.
+```bash
+smritiflow init
+smritiflow scan
+smritiflow status
+smritiflow refresh
+smritiflow resume
+```
 
-## Publish-Ready Checklist
+Typical workflow:
 
-1. Build CLI bundle: `pnpm --filter ./apps/cli build`
-2. Run full checks: `pnpm validate`
-3. Verify packed contents: `cd apps/cli && npm pack --dry-run`
-4. Optional local smoke test:
-5. `cd apps/cli && npm pack`
-6. `mkdir -p /tmp/smritiflow-smoke && cd /tmp/smritiflow-smoke`
-7. `npm init -y`
-8. `npm install /absolute/path/to/smritiflow-<version>.tgz`
-9. `npx smritiflow --help && npx sf --help`
-10. Publish when ready: `cd apps/cli && npm publish --access public`
+1. `init` once per repository
+2. `scan` before substantial work
+3. `status` before resuming
+4. `refresh` after meaningful changes
+5. `resume` when returning to an active codebase
 
-Option 2: Local link from source (works today)
+## Commands
 
-From this repository:
-
-1. `pnpm install`
-2. `pnpm setup` (one-time, only if global pnpm bin is not configured)
-3. `cd apps/cli && pnpm link --global`
-
-From target project:
-
-1. `pnpm link --global smritiflow`
-2. Run `smritiflow init` or `sf init`
-3. Run `smritiflow scan` or `sf scan`
-
-Option 3: npm users without global install
-
-1. In this repo: `cd apps/cli && npm pack`
-2. In target project: `npm install --save-dev /absolute/path/to/smritiflow-<version>.tgz`
-3. Run commands with `npx --package smritiflow smritiflow init`
-4. Alias also works with `npx --package smritiflow sf init`
+- `smritiflow init`: initialize repository memory files
+- `smritiflow scan`: run a full scan and generate artifacts
+- `smritiflow refresh`: refresh memory after repository changes
+- `smritiflow status`: report freshness and stale signals
+- `smritiflow resume`: print a focused resume brief
 
 ## Agent Skill
 
-- Local skill file: `.agents/skills/smritiflow/SKILL.md`
-- Use this to help coding agents discover SmritiFlow workflow and commands.
+This repository also exposes a `smritiflow` skill for agent workflows via `.agents/skills/smritiflow/SKILL.md`.
 
-### Use The Skill Locally
+Install it from GitHub with:
 
-From this repository root:
+```bash
+npx skills add subhajitlucky/smritiflow --skill smritiflow
+```
 
-1. List discovered skills: `npx skills add . --list`
-2. Install this skill for your current project agents: `npx skills add . --skill smritiflow`
-3. Or install globally: `npx skills add . --skill smritiflow -g`
+The skill is discoverable by the `skills` ecosystem and can surface on `skills.sh` through repo-based installation.
 
-### Use The Skill From GitHub
+## Development
 
-After pushing this repo to GitHub:
+This repository uses `pnpm` for development, but end users can install the CLI with npm.
 
-1. List skills in the repo: `npx skills add subhajitlucky/smritiflow --list`
-2. Install only SmritiFlow skill: `npx skills add subhajitlucky/smritiflow --skill smritiflow`
-3. Direct URL also works: `npx skills add https://github.com/subhajitlucky/smritiflow --skill smritiflow`
+```bash
+pnpm install
+pnpm validate
+```
 
-### Verify Installation
+Main development commands:
 
-1. `npx skills list`
-2. Confirm `smritiflow` appears in installed skills output.
+- `pnpm dev`
+- `pnpm typecheck`
+- `pnpm test`
+- `pnpm build`
+- `pnpm validate`
 
-### Publish/Listing On skills.sh
+## Testing
 
-- There is no manual submission form.
-- Skills appear on skills.sh automatically when users install from your repo with `npx skills add ...`.
-- Keep `SKILL.md` valid with YAML frontmatter fields: `name` and `description`.
+Automated coverage includes:
 
-## Test On Another Project
-
-From this repository:
-
-1. `pnpm install`
-2. `pnpm --filter ./apps/cli build`
-3. `pnpm setup` (only needed once on your machine)
-4. `cd apps/cli && pnpm link --global`
-
-From your target project:
-
-1. `pnpm link --global smritiflow`
-2. Run either `smritiflow init` or `sf init`
-3. Then run `smritiflow scan` (or `sf scan`)
-4. Check with `smritiflow status` (or `sf status`)
-
-Minimal validation checklist in target project:
-
-1. `.smritiflow/cache.json` exists
-2. `.smritiflow/project-map.json` exists
-3. `.smritiflow/scan-report.json` exists
-4. `docs/ai/PROJECT_OVERVIEW.md` exists
-5. `AGENTS.md` exists
-
-## Testing Scope
-
-Automated tests cover:
-
-- Repo root detection (`findRepoRoot`)
-- Stack detection heuristics (`detectStack`)
-- Route extraction (`extractRoutes`)
-- Full scan artifact generation (`runScan` integration)
-- Refresh/status/resume behavior (`runRefresh`, `runStatus`, `runResume` integration)
+- repository root detection
+- stack detection heuristics
+- route extraction
+- full scan artifact generation
+- refresh, status, and resume integration flows

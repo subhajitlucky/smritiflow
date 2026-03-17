@@ -1,7 +1,7 @@
 # Project Overview
 
 ## What This Project Is
-Living project memory for coding agents.
+SmritiFlow is a CLI for maintaining living repository memory for coding agents. It scans a codebase, writes structured artifacts, and generates concise agent-facing docs so work can be resumed with current context instead of guesswork.
 
 ## Tech Stack
 ### Frontend
@@ -45,6 +45,6 @@ Living project memory for coding agents.
 - vitest.config.ts
 
 ## Current Maturity
-- Last scan: 2026-03-17T07:28:58.294Z
-- Files scanned: 55
+- Last scan: 2026-03-17T08:38:00.649Z
+- Files scanned: 63
 - Branch: main
