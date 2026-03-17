@@ -64,7 +64,13 @@ This repository also exposes a `smritiflow` skill for agent workflows via `.agen
 Install it from GitHub with:
 
 ```bash
-npx skills add subhajitlucky/smritiflow --skill smritiflow
+npx skills add subhajitlucky/smritiflow
+```
+
+Optional discovery only:
+
+```bash
+npx skills add subhajitlucky/smritiflow --list
 ```
 
 The skill is discoverable by the `skills` ecosystem and can surface on `skills.sh` through repo-based installation.
@@ -85,6 +91,17 @@ Main development commands:
 - `pnpm test`
 - `pnpm build`
 - `pnpm validate`
+
+## Releases
+
+This repository includes a GitHub Actions publish workflow for npm trusted publishing.
+
+Typical release flow:
+
+1. bump the version in `apps/cli/package.json`
+2. push the change to `main`
+3. create and push a tag such as `v0.1.1`
+4. let GitHub Actions publish the package to npm
 
 ## Testing
 
