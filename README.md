@@ -40,6 +40,12 @@ Installed CLI command names:
 - That does not lock users to `pnpm`.
 - SmritiFlow is a normal Node CLI package, so npm users can run it too.
 
+Important install command note:
+
+- `npm install smritiflow` will only work if a package named `smritiflow` is published.
+- For this repo, the CLI package name is currently `@smritiflow/cli`.
+- So the correct publish/install command is: `npm install -g @smritiflow/cli`.
+
 ## How People Can Use SmritiFlow
 
 Option 1: Published package (best for teams)
@@ -47,6 +53,19 @@ Option 1: Published package (best for teams)
 1. Publish `@smritiflow/cli` to npm.
 2. Users run `npm install -g @smritiflow/cli`.
 3. Then they can run `smritiflow init` or `sf init` in any project.
+
+## Publish-Ready Checklist
+
+1. Build CLI bundle: `pnpm --filter @smritiflow/cli build`
+2. Run full checks: `pnpm validate`
+3. Verify packed contents: `cd apps/cli && npm pack --dry-run`
+4. Optional local smoke test:
+5. `cd apps/cli && npm pack`
+6. `mkdir -p /tmp/smritiflow-smoke && cd /tmp/smritiflow-smoke`
+7. `npm init -y`
+8. `npm install /absolute/path/to/smritiflow-cli-<version>.tgz`
+9. `npx smritiflow --help && npx sf --help`
+10. Publish when ready: `cd apps/cli && npm publish --access public`
 
 Option 2: Local link from source (works today)
 

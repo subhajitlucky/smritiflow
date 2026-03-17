@@ -36,6 +36,7 @@ Short alias equivalents:
 - SmritiFlow can be developed with `pnpm` and consumed with `npm`.
 - End users do not need to switch package managers to run the CLI.
 - Typical end-user install after publish is `npm install -g @smritiflow/cli`.
+- `npm install smritiflow` works only if a package named `smritiflow` is published.
 
 ## Suggested Workflow
 
