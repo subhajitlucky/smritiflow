@@ -63,7 +63,7 @@ Option 1: Published package (best for teams)
 5. `cd apps/cli && npm pack`
 6. `mkdir -p /tmp/smritiflow-smoke && cd /tmp/smritiflow-smoke`
 7. `npm init -y`
-8. `npm install /absolute/path/to/smritiflow-cli-<version>.tgz`
+8. `npm install /absolute/path/to/smritiflow-<version>.tgz`
 9. `npx smritiflow --help && npx sf --help`
 10. Publish when ready: `cd apps/cli && npm publish --access public`
 
@@ -92,6 +92,33 @@ Option 3: npm users without global install
 
 - Local skill file: `.agents/skills/smritiflow/SKILL.md`
 - Use this to help coding agents discover SmritiFlow workflow and commands.
+
+### Use The Skill Locally
+
+From this repository root:
+
+1. List discovered skills: `npx skills add . --list`
+2. Install this skill for your current project agents: `npx skills add . --skill smritiflow`
+3. Or install globally: `npx skills add . --skill smritiflow -g`
+
+### Use The Skill From GitHub
+
+After pushing this repo to GitHub:
+
+1. List skills in the repo: `npx skills add subhajitlucky/smritiflow --list`
+2. Install only SmritiFlow skill: `npx skills add subhajitlucky/smritiflow --skill smritiflow`
+3. Direct URL also works: `npx skills add https://github.com/subhajitlucky/smritiflow --skill smritiflow`
+
+### Verify Installation
+
+1. `npx skills list`
+2. Confirm `smritiflow` appears in installed skills output.
+
+### Publish/Listing On skills.sh
+
+- There is no manual submission form.
+- Skills appear on skills.sh automatically when users install from your repo with `npx skills add ...`.
+- Keep `SKILL.md` valid with YAML frontmatter fields: `name` and `description`.
 
 ## Test On Another Project
 
