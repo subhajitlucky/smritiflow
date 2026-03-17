@@ -1,11 +1,37 @@
 import { Command } from "commander";
-import initProjectModule from "../../../packages/core/src/initProject.ts";
 
-const runInit =
-  (initProjectModule as { runInit?: (cwd: string) => Promise<void> }).runInit;
+type CoreAction = (cwd: string) => Promise<void>;
 
-if (!runInit) {
-  throw new Error("runInit not found in core package");
+async function loadCoreAction(
+  modulePath: string,
+  exportName: string
+): Promise<CoreAction> {
+  const mod = await import(modulePath);
+  const named = (mod as Record<string, unknown>)[exportName];
+
+  if (typeof named === "function") {
+    return named as CoreAction;
+  }
+
+  const asDefault = (mod as { default?: unknown }).default;
+  if (typeof asDefault === "function") {
+    return asDefault as CoreAction;
+  }
+
+  if (
+    asDefault &&
+    typeof asDefault === "object" &&
+    typeof (asDefault as Record<string, unknown>)[exportName] === "function"
+  ) {
+    return (asDefault as Record<string, CoreAction>)[exportName];
+  }
+
+  throw new Error(`${exportName} not found in ${modulePath}`);
+}
+
+async function run(modulePath: string, exportName: string): Promise<void> {
+  const action = await loadCoreAction(modulePath, exportName);
+  await action(process.cwd());
 }
 
 const program = new Command();
@@ -17,8 +43,37 @@ program
 
 program
   .command("init")
+  .description("initialize project memory files")
   .action(async () => {
-    await runInit(process.cwd());
+    await run("../../../packages/core/src/initProject", "runInit");
+  });
+
+program
+  .command("scan")
+  .description("run full repository scan and generate living memory files")
+  .action(async () => {
+    await run("../../../packages/core/src/runScan", "runScan");
+  });
+
+program
+  .command("refresh")
+  .description("refresh memory files after repository changes")
+  .action(async () => {
+    await run("../../../packages/core/src/runRefresh", "runRefresh");
+  });
+
+program
+  .command("status")
+  .description("show memory freshness and stale signals")
+  .action(async () => {
+    await run("../../../packages/core/src/runStatus", "runStatus");
+  });
+
+program
+  .command("resume")
+  .description("print a focused repo resume brief for the next work session")
+  .action(async () => {
+    await run("../../../packages/core/src/runResume", "runResume");
   });
 
 program.parse();

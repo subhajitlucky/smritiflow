@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-03-17T06:36:05.869Z",
+  "branch": "main",
+  "lastCommit": "3b4fedb38beacbfc55905640884afc4aa420699f",
+  "recentCommits": [
+    "3b4fedb Refactor code structure and remove redundant changes"
+  ],
+  "changedFiles": [
+    ".smritiflow/cache.json",
+    "AGENTS.md",
+    "apps/cli/src/index.ts",
+    "docs/ai/CURRENT_STATE.md",
+    "docs/ai/PROJECT_OVERVIEW.md",
+    "docs/ai/RUNBOOK.md"
+  ],
+  "activeAreas": [
+    ".smritiflow",
+    ".smritiflow/cache.json",
+    "AGENTS.md",
+    "apps",
+    "apps/cli",
+    "docs",
+    "docs/ai"
+  ],
+  "fileCount": 39,
+  "staleWarnings": []
+}

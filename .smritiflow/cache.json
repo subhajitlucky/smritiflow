@@ -1,4 +1,20 @@
 {
-  "lastScanAt": null,
-  "lastRefreshAt": null
+  "lastScanAt": "2026-03-17T06:36:05.869Z",
+  "lastRefreshAt": "2026-03-17T06:29:54.519Z",
+  "lastCommit": "3b4fedb38beacbfc55905640884afc4aa420699f",
+  "hashes": {
+    "package.json": "d3af4e071ed754c929e82ae0daefca539da179452b7cee34151c80951c502281",
+    "README.md": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "pnpm-lock.yaml": "6d12de43eea2a51e6f1d0ce69ca1444b49f342a4d1d421a3cb35c09e45b778e8",
+    "tsconfig.base.json": "e4aa99f45ee1cad264f1a179560016c9f90e152747ca46bce66a99f6dbf6f78e"
+  },
+  "generatedFiles": [
+    "AGENTS.md",
+    "docs/ai/PROJECT_OVERVIEW.md",
+    "docs/ai/CURRENT_STATE.md",
+    "docs/ai/RUNBOOK.md",
+    ".smritiflow/project-map.json",
+    ".smritiflow/scan-report.json",
+    ".smritiflow/cache.json"
+  ]
 }
