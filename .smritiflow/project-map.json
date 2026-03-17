@@ -14,7 +14,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @smritiflow/cli dev",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm typecheck",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -58,17 +58,17 @@
   ],
   "routes": [],
   "moduleGraph": {
-    "nodes": 36,
-    "edges": 59,
+    "nodes": 40,
+    "edges": 87,
     "hotspots": [
-      "packages/core/src/runScan.ts (21)",
-      "packages/core/src/runRefresh.ts (6)",
+      "packages/core/src/runRefresh.ts (22)",
+      "packages/core/src/runScan.ts (22)",
       "packages/core/src/runStatus.ts (5)",
       "tests/core.refresh-status-resume.integration.test.ts (5)",
       "packages/core/src/runResume.ts (4)",
-      "packages/repo-parser/src/readConfigs.ts (2)",
-      "tests/core.scan.integration.test.ts (2)",
-      "tests/git.findRepoRoot.test.ts (2)"
+      "tests/repo-parser.buildImportGraph.test.ts (4)",
+      "packages/git/src/getChangedFiles.ts (2)",
+      "packages/repo-parser/src/readConfigs.ts (2)"
     ]
   }
 }

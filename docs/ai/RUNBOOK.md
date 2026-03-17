@@ -10,7 +10,7 @@
 - vitest run
 
 ## Lint
-- pnpm -r lint
+- pnpm typecheck
 
 ## Build
 - pnpm -r build
@@ -21,7 +21,7 @@
 ## Common Scripts
 - build: pnpm -r build
 - dev: pnpm --filter @smritiflow/cli dev
-- lint: pnpm -r lint
+- lint: pnpm typecheck
 - typecheck: tsc -p tsconfig.json --noEmit
 - test: vitest run
 - test:watch: vitest

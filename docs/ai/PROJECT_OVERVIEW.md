@@ -23,21 +23,21 @@ Living project memory for coding agents.
 - docs: documentation and memory artifacts
 
 ## Architecture Summary
-- Internal source files: 36
-- Internal import edges: 59
+- Internal source files: 40
+- Internal import edges: 87
 
 ### Route Surface
 - no routes detected
 
 ### Module Hotspots
-- packages/core/src/runScan.ts (21)
-- packages/core/src/runRefresh.ts (6)
+- packages/core/src/runRefresh.ts (22)
+- packages/core/src/runScan.ts (22)
 - packages/core/src/runStatus.ts (5)
 - tests/core.refresh-status-resume.integration.test.ts (5)
 - packages/core/src/runResume.ts (4)
+- tests/repo-parser.buildImportGraph.test.ts (4)
+- packages/git/src/getChangedFiles.ts (2)
 - packages/repo-parser/src/readConfigs.ts (2)
-- tests/core.scan.integration.test.ts (2)
-- tests/git.findRepoRoot.test.ts (2)
 
 ## Important Configs
 - tsconfig.base.json
@@ -45,6 +45,6 @@ Living project memory for coding agents.
 - vitest.config.ts
 
 ## Current Maturity
-- Last scan: 2026-03-17T06:50:09.641Z
-- Files scanned: 49
+- Last scan: 2026-03-17T07:18:46.716Z
+- Files scanned: 53
 - Branch: main
