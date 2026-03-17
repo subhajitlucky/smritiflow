@@ -1,27 +1,31 @@
 {
-  "generatedAt": "2026-03-17T06:36:05.869Z",
+  "generatedAt": "2026-03-17T06:50:09.641Z",
   "branch": "main",
-  "lastCommit": "3b4fedb38beacbfc55905640884afc4aa420699f",
+  "lastCommit": "3e4fe3f8f9f1b1c55b8c18eb64ab9f8bf34e77a6",
   "recentCommits": [
+    "3e4fe3f Refactor project structure and implement core functionalities for SmritiFlow",
     "3b4fedb Refactor code structure and remove redundant changes"
   ],
   "changedFiles": [
-    ".smritiflow/cache.json",
-    "AGENTS.md",
-    "apps/cli/src/index.ts",
-    "docs/ai/CURRENT_STATE.md",
-    "docs/ai/PROJECT_OVERVIEW.md",
-    "docs/ai/RUNBOOK.md"
+    "README.md",
+    "node_modules/.modules.yaml",
+    "node_modules/.pnpm-workspace-state-v1.json",
+    "node_modules/.pnpm/lock.yaml",
+    "node_modules/.pnpm/node_modules/picomatch",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml"
   ],
   "activeAreas": [
-    ".smritiflow",
-    ".smritiflow/cache.json",
-    "AGENTS.md",
-    "apps",
-    "apps/cli",
-    "docs",
-    "docs/ai"
+    "node_modules",
+    "node_modules/.modules.yaml",
+    "node_modules/.pnpm",
+    "node_modules/.pnpm-workspace-state-v1.json",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "README.md"
   ],
-  "fileCount": 39,
+  "fileCount": 49,
   "staleWarnings": []
 }

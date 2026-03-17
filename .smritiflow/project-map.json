@@ -7,15 +7,24 @@
       "nodejs-cli"
     ],
     "database": [],
-    "testing": []
+    "testing": [
+      "vitest"
+    ]
   },
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter @smritiflow/cli dev",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "validate": "pnpm typecheck && pnpm test && pnpm build"
   },
   "folders": [
+    {
+      "path": "tests",
+      "purpose": "test suites"
+    },
     {
       "path": "apps",
       "purpose": "workspace applications"
@@ -30,9 +39,12 @@
     }
   ],
   "configs": [
-    "tsconfig.base.json"
+    "tsconfig.base.json",
+    "tsconfig.json",
+    "vitest.config.ts"
   ],
   "dependencies": [
+    "@types/fs-extra",
     "@types/node",
     "commander",
     "fast-glob",
@@ -41,21 +53,22 @@
     "simple-git",
     "tsx",
     "typescript",
+    "vitest",
     "zod"
   ],
   "routes": [],
   "moduleGraph": {
-    "nodes": 27,
-    "edges": 47,
+    "nodes": 36,
+    "edges": 59,
     "hotspots": [
       "packages/core/src/runScan.ts (21)",
       "packages/core/src/runRefresh.ts (6)",
       "packages/core/src/runStatus.ts (5)",
+      "tests/core.refresh-status-resume.integration.test.ts (5)",
       "packages/core/src/runResume.ts (4)",
       "packages/repo-parser/src/readConfigs.ts (2)",
-      "packages/core/src/initProject.ts (1)",
-      "packages/generators/src/generateAgents.ts (1)",
-      "packages/generators/src/generateCurrentState.ts (1)"
+      "tests/core.scan.integration.test.ts (2)",
+      "tests/git.findRepoRoot.test.ts (2)"
     ]
   }
 }

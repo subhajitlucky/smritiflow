@@ -1,7 +1,7 @@
 # Project Overview
 
 ## What This Project Is
-SmritiFlow repository.
+Living project memory for coding agents.
 
 ## Tech Stack
 ### Frontend
@@ -14,16 +14,17 @@ SmritiFlow repository.
 - none detected
 
 ### Testing
-- none detected
+- vitest
 
 ## Repo Layout
+- tests: test suites
 - apps: workspace applications
 - packages: shared internal packages
 - docs: documentation and memory artifacts
 
 ## Architecture Summary
-- Internal source files: 27
-- Internal import edges: 47
+- Internal source files: 36
+- Internal import edges: 59
 
 ### Route Surface
 - no routes detected
@@ -32,16 +33,18 @@ SmritiFlow repository.
 - packages/core/src/runScan.ts (21)
 - packages/core/src/runRefresh.ts (6)
 - packages/core/src/runStatus.ts (5)
+- tests/core.refresh-status-resume.integration.test.ts (5)
 - packages/core/src/runResume.ts (4)
 - packages/repo-parser/src/readConfigs.ts (2)
-- packages/core/src/initProject.ts (1)
-- packages/generators/src/generateAgents.ts (1)
-- packages/generators/src/generateCurrentState.ts (1)
+- tests/core.scan.integration.test.ts (2)
+- tests/git.findRepoRoot.test.ts (2)
 
 ## Important Configs
 - tsconfig.base.json
+- tsconfig.json
+- vitest.config.ts
 
 ## Current Maturity
-- Last scan: 2026-03-17T06:36:05.869Z
-- Files scanned: 39
+- Last scan: 2026-03-17T06:50:09.641Z
+- Files scanned: 49
 - Branch: main

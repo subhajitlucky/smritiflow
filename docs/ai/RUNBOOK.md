@@ -7,7 +7,7 @@
 - pnpm --filter @smritiflow/cli dev
 
 ## Test
-- not defined
+- vitest run
 
 ## Lint
 - pnpm -r lint
@@ -22,4 +22,7 @@
 - build: pnpm -r build
 - dev: pnpm --filter @smritiflow/cli dev
 - lint: pnpm -r lint
-- typecheck: pnpm -r typecheck
+- typecheck: tsc -p tsconfig.json --noEmit
+- test: vitest run
+- test:watch: vitest
+- validate: pnpm typecheck && pnpm test && pnpm build

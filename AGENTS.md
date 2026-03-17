@@ -16,6 +16,8 @@ SmritiFlow keeps living repo memory for coding agents.
 - pnpm dev
 - pnpm lint
 - pnpm typecheck
+- pnpm test
+- pnpm test:watch
 - pnpm dev init
 - pnpm dev scan
 - pnpm dev refresh

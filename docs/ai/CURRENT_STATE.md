@@ -1,32 +1,36 @@
 # Current State
 
-- Generated at: 2026-03-17T06:36:05.869Z
+- Generated at: 2026-03-17T06:50:09.641Z
 - Branch: main
-- Last commit: 3b4fedb38beacbfc55905640884afc4aa420699f
+- Last commit: 3e4fe3f8f9f1b1c55b8c18eb64ab9f8bf34e77a6
 
 ## Recent Commits
+- 3e4fe3f Refactor project structure and implement core functionalities for SmritiFlow
 - 3b4fedb Refactor code structure and remove redundant changes
 
 ## Changed Files
-- .smritiflow/cache.json
-- AGENTS.md
-- apps/cli/src/index.ts
-- docs/ai/CURRENT_STATE.md
-- docs/ai/PROJECT_OVERVIEW.md
-- docs/ai/RUNBOOK.md
+- README.md
+- node_modules/.modules.yaml
+- node_modules/.pnpm-workspace-state-v1.json
+- node_modules/.pnpm/lock.yaml
+- node_modules/.pnpm/node_modules/picomatch
+- package.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
 
 ## Likely Active Areas
-- .smritiflow
-- .smritiflow/cache.json
-- AGENTS.md
-- apps
-- apps/cli
-- docs
-- docs/ai
+- node_modules
+- node_modules/.modules.yaml
+- node_modules/.pnpm
+- node_modules/.pnpm-workspace-state-v1.json
+- package.json
+- pnpm-lock.yaml
+- pnpm-workspace.yaml
+- README.md
 
 ## Active Work Signals
-- Changed file count: 6
-- Active area count: 7
+- Changed file count: 8
+- Active area count: 8
 
 ## Known TODOs
 - no TODO extraction yet
