@@ -20,52 +20,8 @@ import { generateAgents } from "../../generators/src/generateAgents.ts";
 import { writeArtifacts } from "../../generators/src/writeArtifacts.ts";
 import { GENERATED_FILES } from "../../shared/src/constants.ts";
 import type { CacheData, ProjectMap, ScanReport } from "../../shared/src/types.ts";
-import { nowIso, sha256File, topLevelArea, uniqueSorted } from "../../shared/src/utils.ts";
-
-function inferActiveAreas(changedFiles: string[]): string[] {
-  const firstPass = changedFiles.map((f) => topLevelArea(f));
-  const secondPass = changedFiles
-    .map((filePath) => filePath.replaceAll("\\", "/"))
-    .map((normalized) => normalized.split("/").slice(0, 2).join("/"))
-    .filter((value) => value.length > 0 && value !== ".");
-
-  return uniqueSorted([...firstPass, ...secondPass]);
-}
-
-async function computeHashes(repoRoot: string): Promise<Record<string, string>> {
-  const keyFiles = [
-    "package.json",
-    "README.md",
-    "pnpm-lock.yaml",
-    "tsconfig.json",
-    "tsconfig.base.json",
-  ];
-
-  const hashes: Record<string, string> = {};
-  for (const rel of keyFiles) {
-    const full = path.join(repoRoot, rel);
-    const hash = await sha256File(full);
-    if (hash) {
-      hashes[rel] = hash;
-    }
-  }
-
-  return hashes;
-}
-
-function summarizeReadme(readmeText: string): string {
-  const trimmed = readmeText.trim();
-  if (!trimmed) {
-    return "SmritiFlow repository.";
-  }
-
-  const firstNonHeading = trimmed
-    .split("\n")
-    .map((line) => line.trim())
-    .find((line) => line.length > 0 && !line.startsWith("#"));
-
-  return firstNonHeading ?? "SmritiFlow repository.";
-}
+import { nowIso, uniqueSorted } from "../../shared/src/utils.ts";
+import { computeHashes, inferActiveAreas, summarizeReadme } from "./scanMetadata.ts";
 
 export async function runScan(cwd: string): Promise<void> {
   const repoRoot = await findRepoRoot(cwd);

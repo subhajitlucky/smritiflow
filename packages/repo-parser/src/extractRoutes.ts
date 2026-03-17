@@ -1,6 +1,13 @@
 import fg from "fast-glob";
 import { uniqueSorted } from "../../shared/src/utils.ts";
 
+function normalizeDynamicSegments(routePath: string): string {
+  return routePath
+    .replace(/\[\[\.\.\.(.+?)\]\]/g, ":$1*")
+    .replace(/\[\.\.\.(.+?)\]/g, ":$1*")
+    .replace(/\[(.+?)\]/g, ":$1");
+}
+
 function filePathToRoute(filePath: string): string {
   const normalized = filePath.replaceAll("\\", "/");
 
@@ -9,8 +16,10 @@ function filePathToRoute(filePath: string): string {
     const cleaned = tail
       .replace(/\/page\.(tsx|ts|jsx|js|mdx)$/, "")
       .replaceAll("/index", "")
-      .replace(/\[(.+?)\]/g, ":$1");
-    return `/${cleaned}`.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
+      .replace(/(^|\/)\([^/]+\)/g, "")
+      .replace(/\/@[^/]+/g, "");
+    const route = normalizeDynamicSegments(cleaned);
+    return `/${route}`.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
   }
 
   if (normalized.includes("/pages/")) {
@@ -18,8 +27,9 @@ function filePathToRoute(filePath: string): string {
     const cleaned = tail
       .replace(/\.(tsx|ts|jsx|js|mdx)$/, "")
       .replace(/(^|\/)index$/, "")
-      .replace(/\[(.+?)\]/g, ":$1");
-    return `/${cleaned}`.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
+      .replace(/\/@[^/]+/g, "");
+    const route = normalizeDynamicSegments(cleaned);
+    return `/${route}`.replace(/\/+/g, "/").replace(/\/$/, "") || "/";
   }
 
   return normalized;

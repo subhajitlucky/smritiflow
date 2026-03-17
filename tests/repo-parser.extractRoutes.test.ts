@@ -9,14 +9,21 @@ describe("extractRoutes", () => {
 
     try {
       await fs.outputFile(`${dir}/src/app/blog/[slug]/page.tsx`, "export default null;\n");
+      await fs.outputFile(
+        `${dir}/src/app/(marketing)/docs/[...slug]/page.tsx`,
+        "export default null;\n"
+      );
       await fs.outputFile(`${dir}/src/pages/index.tsx`, "export default null;\n");
       await fs.outputFile(`${dir}/src/pages/about.tsx`, "export default null;\n");
+      await fs.outputFile(`${dir}/src/pages/api/health.ts`, "export default null;\n");
 
       const routes = await extractRoutes(dir);
 
       expect(routes).toContain("/");
       expect(routes).toContain("/about");
       expect(routes).toContain("/blog/:slug");
+      expect(routes).toContain("/docs/:slug*");
+      expect(routes.join("\n")).not.toContain("/api/health");
     } finally {
       await fs.remove(dir);
     }

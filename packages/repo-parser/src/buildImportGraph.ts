@@ -20,7 +20,12 @@ export async function buildImportGraph(
 
   for (const file of sourceFiles) {
     const abs = path.join(repoRoot, file);
-    const content = await fs.readFile(abs, "utf8");
+    let content = "";
+    try {
+      content = await fs.readFile(abs, "utf8");
+    } catch {
+      continue;
+    }
 
     let localEdges = 0;
 

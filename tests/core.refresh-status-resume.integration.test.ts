@@ -52,7 +52,9 @@ describe("runRefresh/runStatus/runResume integration", () => {
       await runRefresh(repoRoot);
 
       const cache = await fs.readJson(path.join(repoRoot, ".smritiflow", "cache.json"));
+      const scanReport = await fs.readJson(path.join(repoRoot, ".smritiflow", "scan-report.json"));
       expect(cache.lastRefreshAt).toBeTruthy();
+      expect(scanReport.staleWarnings[0]).toContain("Partial refresh applied");
 
       const resumeOutput = await captureConsoleLogs(async () => {
         await runResume(repoRoot);
@@ -61,6 +63,47 @@ describe("runRefresh/runStatus/runResume integration", () => {
       expect(resumeOutput).toContain("SmritiFlow resume");
       expect(resumeOutput).toContain("Read first:");
       expect(resumeOutput).toContain("Suggested next steps:");
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it("reports no-op refresh when nothing changed", async () => {
+    const { repoRoot, cleanup } = await createTempRepo({
+      "package.json": JSON.stringify({ name: "noop-app" }, null, 2),
+      "README.md": "# Noop App\n\nStable.\n",
+      "src/index.ts": "export const value = 1;\n",
+    });
+
+    try {
+      await runScan(repoRoot);
+
+      const refreshOutput = await captureConsoleLogs(async () => {
+        await runRefresh(repoRoot);
+      });
+
+      expect(refreshOutput).toContain("No changes detected. Project memory is already fresh.");
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it("reports fresh status when working tree is unchanged", async () => {
+    const { repoRoot, cleanup } = await createTempRepo({
+      "package.json": JSON.stringify({ name: "fresh-app" }, null, 2),
+      "README.md": "# Fresh App\n\nStable.\n",
+      "src/index.ts": "export const value = 1;\n",
+    });
+
+    try {
+      await runScan(repoRoot);
+
+      const statusOutput = await captureConsoleLogs(async () => {
+        await runStatus(repoRoot);
+      });
+
+      expect(statusOutput).toContain("Stale: no");
+      expect(statusOutput).toContain("Project memory looks fresh.");
     } finally {
       await cleanup();
     }
