@@ -45,6 +45,6 @@ SmritiFlow is a CLI for maintaining living repository memory for coding agents. 
 - vitest.config.ts
 
 ## Current Maturity
-- Last scan: 2026-03-17T14:02:15.326Z
+- Last scan: 2026-03-17T14:20:44.022Z
 - Files scanned: 63
 - Branch: main

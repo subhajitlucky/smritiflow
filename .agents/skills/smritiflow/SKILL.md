@@ -5,52 +5,68 @@ description: Repository memory workflow skill for SmritiFlow init, scan, refresh
 
 # SmritiFlow Skill
 
-Use this skill when you need repository memory context, onboarding guidance, or freshness checks for a codebase.
-
-## Purpose
-
-SmritiFlow creates and maintains living repository memory for coding agents by generating machine-readable artifacts and agent-readable docs.
+Use this skill when you need repository memory context, freshness checks, or a fast resume workflow for a codebase.
 
 ## When To Use
 
 Use this skill when asked to:
-- initialize project memory
+- initialize repo memory
 - scan or refresh repository context
 - check whether repo memory is stale
-- resume work quickly with active-area context
+- resume work with active-area context
 - prepare an agent handoff summary
 
-## Core Commands
+Do not use this skill when:
+- the user only wants a generic code explanation with no repository-memory workflow
+- the repo does not need SmritiFlow artifacts or freshness checks
+
+## Quick Start
+
+Prefer these commands:
+
+```bash
+smritiflow status
+smritiflow refresh
+smritiflow resume
+```
 
 Both command names are supported:
-- `smritiflow init`
-- `smritiflow scan`
-- `smritiflow refresh`
-- `smritiflow status`
-- `smritiflow resume`
 
-Short alias equivalents:
-- `sf init`
-- `sf scan`
-- `sf refresh`
-- `sf status`
-- `sf resume`
+- `smritiflow init|scan|refresh|status|resume`
+- `sf init|scan|refresh|status|resume`
 
-## Package Manager Compatibility
+If SmritiFlow is not installed, the normal install path is:
 
-- SmritiFlow can be developed with `pnpm` and consumed with `npm`.
-- End users do not need to switch package managers to run the CLI.
-- Typical end-user install after publish is `npm install -g smritiflow`.
+```bash
+npm install -g smritiflow
+```
 
-## Suggested Workflow
+Project-local usage also works after a local install:
 
-1. Run `smritiflow init` once per repository.
-2. Run `smritiflow scan` before starting substantial work.
-3. Run `smritiflow status` before and after implementation.
-4. Run `smritiflow refresh` after meaningful changes.
-5. Run `smritiflow resume` when returning to paused work.
+```bash
+npm install --save-dev smritiflow
+npx smritiflow status
+```
 
-## Generated Files
+## Workflow
+
+1. Start with `smritiflow status`.
+2. If the repo is stale, run `smritiflow refresh`.
+3. Use `smritiflow resume` to identify active areas and next actions.
+4. Use `smritiflow scan` when a full regeneration is needed.
+5. Use `smritiflow init` only when memory files do not exist yet.
+
+## Read Order
+
+When SmritiFlow artifacts exist, prefer this order:
+
+1. `.smritiflow/scan-report.json`
+2. `docs/ai/PROJECT_OVERVIEW.md`
+3. `docs/ai/CURRENT_STATE.md`
+4. `docs/ai/RUNBOOK.md`
+5. `AGENTS.md`
+
+## Generated Outputs
 
 - `.smritiflow/cache.json`
 - `.smritiflow/project-map.json`
@@ -60,10 +76,10 @@ Short alias equivalents:
 - `docs/ai/CURRENT_STATE.md`
 - `docs/ai/RUNBOOK.md`
 
-## Agent Guidance
+## Rules
 
 - Prefer facts from `.smritiflow/*.json` over assumptions.
-- Treat `docs/ai/*.md` as human-readable summaries of JSON artifacts.
-- If `status` is stale, run `refresh` before making decisions.
-- Use `resume` output to focus on active areas first.
-- If a user prefers npm, provide npm install/link or `npx --package` examples.
+- Treat `docs/ai/*.md` as summaries of the generated JSON artifacts.
+- If `status` is stale, refresh before making planning decisions.
+- Use `resume` to narrow focus before broad repo exploration.
+- After meaningful code changes, run `refresh` so artifacts stay current.

@@ -62,16 +62,24 @@ Typical workflow:
 
 This repository also exposes a `smritiflow` skill for agent workflows via `.agents/skills/smritiflow/SKILL.md`.
 
-Install it from GitHub with:
+Install the skill from GitHub with:
 
 ```bash
 npx skills add subhajitlucky/smritiflow
 ```
 
+That installs the repo-hosted `smritiflow` skill for supported agents.
+
 Optional discovery only:
 
 ```bash
 npx skills add subhajitlucky/smritiflow --list
+```
+
+Use the CLI itself with:
+
+```bash
+npm install -g smritiflow
 ```
 
 The skill is discoverable by the `skills` ecosystem and can surface on `skills.sh` through repo-based installation.
