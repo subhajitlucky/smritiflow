@@ -1,3 +1,8 @@
+---
+name: smritiflow
+description: Repository memory workflow skill for SmritiFlow init, scan, refresh, status, and resume commands.
+---
+
 # SmritiFlow Skill
 
 Use this skill when you need repository memory context, onboarding guidance, or freshness checks for a codebase.
@@ -35,8 +40,7 @@ Short alias equivalents:
 
 - SmritiFlow can be developed with `pnpm` and consumed with `npm`.
 - End users do not need to switch package managers to run the CLI.
-- Typical end-user install after publish is `npm install -g @smritiflow/cli`.
-- `npm install smritiflow` works only if a package named `smritiflow` is published.
+- Typical end-user install after publish is `npm install -g smritiflow`.
 
 ## Suggested Workflow
 

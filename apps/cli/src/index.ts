@@ -1,10 +1,10 @@
 import { Command } from "commander";
 import path from "node:path";
-import { runInit } from "../../../packages/core/src/initProject.ts";
-import { runScan } from "../../../packages/core/src/runScan.ts";
-import { runRefresh } from "../../../packages/core/src/runRefresh.ts";
-import { runStatus } from "../../../packages/core/src/runStatus.ts";
-import { runResume } from "../../../packages/core/src/runResume.ts";
+import { runInit } from "../../../packages/core/src/initProject.js";
+import { runScan } from "../../../packages/core/src/runScan.js";
+import { runRefresh } from "../../../packages/core/src/runRefresh.js";
+import { runStatus } from "../../../packages/core/src/runStatus.js";
+import { runResume } from "../../../packages/core/src/runResume.js";
 
 const program = new Command();
 const invokedCommand = path.basename(process.argv[1] ?? "smritiflow");

@@ -1,5 +1,5 @@
 {
-  "name": "@smritiflow/cli",
+  "name": "smritiflow",
   "version": "0.1.0",
   "type": "module",
   "bin": {

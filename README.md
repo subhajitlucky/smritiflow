@@ -42,21 +42,21 @@ Installed CLI command names:
 
 Important install command note:
 
-- `npm install smritiflow` will only work if a package named `smritiflow` is published.
-- For this repo, the CLI package name is currently `@smritiflow/cli`.
-- So the correct publish/install command is: `npm install -g @smritiflow/cli`.
+- This repo publishes the CLI as `smritiflow`.
+- Global install command is: `npm install -g smritiflow`.
+- Project-local usage also works via `npx smritiflow <command>`.
 
 ## How People Can Use SmritiFlow
 
 Option 1: Published package (best for teams)
 
-1. Publish `@smritiflow/cli` to npm.
-2. Users run `npm install -g @smritiflow/cli`.
+1. Publish `smritiflow` to npm.
+2. Users run `npm install -g smritiflow`.
 3. Then they can run `smritiflow init` or `sf init` in any project.
 
 ## Publish-Ready Checklist
 
-1. Build CLI bundle: `pnpm --filter @smritiflow/cli build`
+1. Build CLI bundle: `pnpm --filter ./apps/cli build`
 2. Run full checks: `pnpm validate`
 3. Verify packed contents: `cd apps/cli && npm pack --dry-run`
 4. Optional local smoke test:
@@ -77,16 +77,16 @@ From this repository:
 
 From target project:
 
-1. `pnpm link --global @smritiflow/cli`
+1. `pnpm link --global smritiflow`
 2. Run `smritiflow init` or `sf init`
 3. Run `smritiflow scan` or `sf scan`
 
 Option 3: npm users without global install
 
 1. In this repo: `cd apps/cli && npm pack`
-2. In target project: `npm install --save-dev /absolute/path/to/smritiflow-cli-<version>.tgz`
-3. Run commands with `npx --package @smritiflow/cli smritiflow init`
-4. Alias also works with `npx --package @smritiflow/cli sf init`
+2. In target project: `npm install --save-dev /absolute/path/to/smritiflow-<version>.tgz`
+3. Run commands with `npx --package smritiflow smritiflow init`
+4. Alias also works with `npx --package smritiflow sf init`
 
 ## Agent Skill
 
@@ -98,13 +98,13 @@ Option 3: npm users without global install
 From this repository:
 
 1. `pnpm install`
-2. `pnpm --filter @smritiflow/cli build`
+2. `pnpm --filter ./apps/cli build`
 3. `pnpm setup` (only needed once on your machine)
 4. `cd apps/cli && pnpm link --global`
 
 From your target project:
 
-1. `pnpm link --global @smritiflow/cli`
+1. `pnpm link --global smritiflow`
 2. Run either `smritiflow init` or `sf init`
 3. Then run `smritiflow scan` (or `sf scan`)
 4. Check with `smritiflow status` (or `sf status`)
