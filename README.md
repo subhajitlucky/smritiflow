@@ -2,6 +2,10 @@
 
 SmritiFlow is a CLI for maintaining living repository memory for coding agents. It scans a codebase, writes structured artifacts, and generates concise agent-facing docs so work can be resumed with current context instead of guesswork.
 
+- Status: Published CLI
+- Portfolio case study: https://subhajitpradhan.vercel.app/projects/smritiflow
+- Inspect the implementation: `apps/cli`, `packages/core/src`, `tests`, and `.agents/skills/smritiflow/SKILL.md`
+
 ## What It Generates
 
 - `.smritiflow/cache.json`
