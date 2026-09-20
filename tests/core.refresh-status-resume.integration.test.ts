@@ -1,5 +1,6 @@
 import path from "node:path";
 import fs from "fs-extra";
+import simpleGit from "simple-git";
 import { describe, expect, it, vi } from "vitest";
 import { runScan } from "../packages/core/src/runScan.ts";
 import { runRefresh } from "../packages/core/src/runRefresh.ts";
@@ -104,6 +105,68 @@ describe("runRefresh/runStatus/runResume integration", () => {
 
       expect(statusOutput).toContain("Stale: no");
       expect(statusOutput).toContain("Project memory looks fresh.");
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it("detects commits made after the last scan", async () => {
+    const { repoRoot, cleanup } = await createTempRepo({
+      "package.json": JSON.stringify({ name: "commit-app" }, null, 2),
+      "README.md": "# Commit App\n\nStable.\n",
+      "src/index.ts": "export const value = 1;\n",
+    });
+
+    try {
+      await runScan(repoRoot);
+
+      const git = simpleGit(repoRoot);
+      await fs.writeFile(path.join(repoRoot, "src", "index.ts"), "export const value = 2;\n");
+      await git.add(".");
+      await git.commit("feat: update value");
+
+      const refreshOutput = await captureConsoleLogs(async () => {
+        await runRefresh(repoRoot);
+      });
+
+      expect(refreshOutput).toContain("Refresh complete");
+      expect(refreshOutput).not.toContain("No changes detected");
+
+      const scanReport = await fs.readJson(
+        path.join(repoRoot, ".smritiflow", "scan-report.json")
+      );
+      expect(scanReport.changedFiles).toContain("src/index.ts");
+      expect(scanReport.changedFiles).not.toContain("AGENTS.md");
+      expect(scanReport.staleWarnings[0]).toContain("Partial refresh applied");
+    } finally {
+      await cleanup();
+    }
+  });
+
+  it("falls back to a full scan when the recorded commit is unavailable", async () => {
+    const { repoRoot, cleanup } = await createTempRepo({
+      "package.json": JSON.stringify({ name: "rewrite-app" }, null, 2),
+      "README.md": "# Rewrite App\n\nStable.\n",
+      "src/index.ts": "export const value = 1;\n",
+    });
+
+    try {
+      await runScan(repoRoot);
+
+      const cachePath = path.join(repoRoot, ".smritiflow", "cache.json");
+      const cache = await fs.readJson(cachePath);
+      cache.lastCommit = "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef";
+      await fs.writeJson(cachePath, cache);
+
+      const refreshOutput = await captureConsoleLogs(async () => {
+        await runRefresh(repoRoot);
+      });
+
+      expect(refreshOutput).toContain("Refresh complete");
+      const scanReport = await fs.readJson(
+        path.join(repoRoot, ".smritiflow", "scan-report.json")
+      );
+      expect(scanReport.staleWarnings[0]).toContain("full scan");
     } finally {
       await cleanup();
     }

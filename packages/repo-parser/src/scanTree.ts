@@ -1,18 +1,16 @@
 import fg from "fast-glob";
+import { applyIgnoreRules, FAST_GLOB_PRUNE_PATTERNS, loadIgnoreRules } from "./ignoreRules.ts";
 
 export async function scanTree(repoRoot: string): Promise<string[]> {
   const files = await fg(["**/*"], {
     cwd: repoRoot,
-    dot: false,
+    dot: true,
     onlyFiles: true,
-    ignore: [
-      "node_modules/**",
-      ".git/**",
-      "dist/**",
-      ".smritiflow/**",
-      "**/.DS_Store",
-    ],
+    followSymbolicLinks: false,
+    ignore: FAST_GLOB_PRUNE_PATTERNS,
   });
 
-  return files.sort((a, b) => a.localeCompare(b));
+  const rules = await loadIgnoreRules(repoRoot);
+
+  return applyIgnoreRules(rules, files).sort((a, b) => a.localeCompare(b));
 }

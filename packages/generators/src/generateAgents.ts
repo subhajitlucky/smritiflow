@@ -4,7 +4,7 @@ export function generateAgents(projectMap: ProjectMap): string {
   const commands = Object.keys(projectMap.scripts).slice(0, 6);
 
   return [
-    "# AGENTS.md",
+    "## SmritiFlow Memory",
     "",
     "Read docs/ai files first.",
     "",

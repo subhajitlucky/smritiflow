@@ -62,6 +62,12 @@ Typical workflow:
 - `smritiflow status`: report freshness and stale signals
 - `smritiflow resume`: print a focused resume brief
 
+## Behavior Notes
+
+- **Commit-aware refresh**: `refresh` compares the commit recorded in `.smritiflow/cache.json` with HEAD, so changes made in commits are detected, not only uncommitted working-tree edits. If the recorded commit is no longer reachable (rebase or force-push), it falls back to a full scan.
+- **Ignore handling**: scans respect the repository `.gitignore` and always exclude `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, `.turbo/`, `.smritiflow/`, and `docs/ai/` at any depth. Hidden directories such as `.github/` are included.
+- **Merge-safe `AGENTS.md`**: generated content lives inside `<!-- smritiflow:begin -->` / `<!-- smritiflow:end -->` markers. Hand-written content outside the block is preserved, and files without markers receive the managed block appended instead of being overwritten.
+
 ## Agent Skill
 
 This repository also exposes a `smritiflow` skill for agent workflows via `.agents/skills/smritiflow/SKILL.md`.
