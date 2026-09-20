@@ -1,7 +1,8 @@
 import path from "node:path";
 import fs from "fs-extra";
 import { findRepoRoot } from "../../git/src/findRepoRoot.ts";
-import { getChangedFiles } from "../../git/src/getChangedFiles.ts";
+import { getChangedFiles, shouldTrackChangedFile } from "../../git/src/getChangedFiles.ts";
+import { getChangedFilesSince } from "../../git/src/getChangedFilesSince.ts";
 import { getCurrentBranch } from "../../git/src/getCurrentBranch.ts";
 import { getLastCommit } from "../../git/src/getLastCommit.ts";
 import { getRecentCommits } from "../../git/src/getRecentCommits.ts";
@@ -18,6 +19,7 @@ import { generateOverview } from "../../generators/src/generateOverview.ts";
 import { generateCurrentState } from "../../generators/src/generateCurrentState.ts";
 import { generateRunbook } from "../../generators/src/generateRunbook.ts";
 import { generateAgents } from "../../generators/src/generateAgents.ts";
+import { writeAgentsFile } from "../../generators/src/writeAgents.ts";
 import { GENERATED_FILES } from "../../shared/src/constants.ts";
 import type { CacheData, ProjectMap, ScanReport } from "../../shared/src/types.ts";
 import { nowIso, uniqueSorted } from "../../shared/src/utils.ts";
@@ -155,8 +157,29 @@ export async function runRefresh(cwd: string): Promise<void> {
   ]);
 
   const hashChanged = diffHashKeys(prevCache.hashes ?? {}, currentHashes);
-  const allChanged = normalizeChangedPaths([...gitChangedRaw, ...hashChanged]);
-  const gitChanged = normalizeChangedPaths(gitChangedRaw);
+  const previousCommit = prevCache.lastCommit ?? null;
+  let committedChanges: string[] = [];
+
+  if (previousCommit !== null && previousCommit !== "unknown" && previousCommit !== lastCommit) {
+    try {
+      committedChanges = (await getChangedFilesSince(repoRoot, previousCommit)).filter(
+        shouldTrackChangedFile
+      );
+    } catch {
+      await runFullRefresh(repoRoot, "recorded commit is no longer available", currentHashes, hashChanged);
+      console.log("Refresh complete. Changed files: ${hashChanged.length}");
+      return;
+    }
+  }
+
+  if (previousCommit === null && lastCommit !== "unknown") {
+    await runFullRefresh(repoRoot, "cache has no recorded commit", currentHashes, hashChanged);
+    console.log("Refresh complete. Changed files: ${hashChanged.length}");
+    return;
+  }
+
+  const allChanged = normalizeChangedPaths([...committedChanges, ...hashChanged, ...gitChangedRaw]);
+  const gitChanged = normalizeChangedPaths([...committedChanges, ...gitChangedRaw]);
 
   if (allChanged.length === 0) {
     const nextCache: CacheData = {
@@ -266,7 +289,7 @@ export async function runRefresh(cwd: string): Promise<void> {
     const runbook = generateRunbook(nextProjectMap.scripts);
     const agents = generateAgents(nextProjectMap);
     await fs.writeFile(path.join(docsDir, "RUNBOOK.md"), runbook);
-    await fs.writeFile(path.join(repoRoot, "AGENTS.md"), agents);
+    await writeAgentsFile(repoRoot, agents);
   }
 
   const currentState = generateCurrentState(nextScanReport);

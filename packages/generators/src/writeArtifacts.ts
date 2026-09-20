@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "fs-extra";
 import type { CacheData, ProjectMap, ScanReport } from "../../shared/src/types.ts";
+import { writeAgentsFile } from "./writeAgents.ts";
 
 interface WriteArtifactsInput {
   repoRoot: string;
@@ -34,7 +35,7 @@ export async function writeArtifacts(input: WriteArtifactsInput): Promise<void> 
     spaces: 2,
   });
 
-  await fs.writeFile(path.join(input.repoRoot, "AGENTS.md"), input.docs.agents);
+  await writeAgentsFile(input.repoRoot, input.docs.agents);
   await fs.writeFile(path.join(docsDir, "PROJECT_OVERVIEW.md"), input.docs.overview);
   await fs.writeFile(path.join(docsDir, "CURRENT_STATE.md"), input.docs.currentState);
   await fs.writeFile(path.join(docsDir, "RUNBOOK.md"), input.docs.runbook);

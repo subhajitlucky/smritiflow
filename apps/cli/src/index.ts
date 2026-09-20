@@ -1,10 +1,27 @@
 import { Command } from "commander";
+import { readFileSync } from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { runInit } from "../../../packages/core/src/initProject.js";
 import { runScan } from "../../../packages/core/src/runScan.js";
 import { runRefresh } from "../../../packages/core/src/runRefresh.js";
 import { runStatus } from "../../../packages/core/src/runStatus.js";
 import { runResume } from "../../../packages/core/src/runResume.js";
+
+function readCliVersion(): string {
+  try {
+    const here =
+      typeof __dirname === "string"
+        ? __dirname
+        : path.dirname(fileURLToPath(import.meta.url));
+    const manifest = JSON.parse(
+      readFileSync(path.join(here, "..", "package.json"), "utf8")
+    ) as { version?: string };
+    return manifest.version ?? "0.0.0";
+  } catch {
+    return "0.0.0";
+  }
+}
 
 const program = new Command();
 const invokedCommand = path.basename(process.argv[1] ?? "smritiflow");
@@ -12,7 +29,7 @@ const invokedCommand = path.basename(process.argv[1] ?? "smritiflow");
 program
   .name(invokedCommand === "sf" ? "sf" : "smritiflow")
   .description("Living project memory for coding agents")
-  .version("0.1.0");
+  .version(readCliVersion());
 
 program
   .command("init")

@@ -7,7 +7,7 @@ const GENERATED_FILE_SET = new Set(
   GENERATED_FILES.map((filePath) => filePath.replaceAll("\\", "/"))
 );
 
-function shouldTrackChangedFile(filePath: string): boolean {
+export function shouldTrackChangedFile(filePath: string): boolean {
   const normalized = filePath.replaceAll("\\", "/");
 
   if (IGNORED_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
