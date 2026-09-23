@@ -1,0 +1,37 @@
+<svg width="920" height="626" viewBox="0 0 920 626" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">SmritiFlow handoff preview</title>
+  <desc id="desc">A terminal preview showing SmritiFlow scan generating AGENTS.md and project memory from an empty repository memory state.</desc>
+  <rect width="920" height="626" fill="#0f1115"/>
+  <rect x="24" y="24" width="872" height="578" rx="10" fill="#171a21" stroke="#2a2f3a"/>
+  <circle cx="52" cy="52" r="6" fill="#ff5f57"/>
+  <circle cx="74" cy="52" r="6" fill="#ffbd2e"/>
+  <circle cx="96" cy="52" r="6" fill="#28c840"/>
+  <text x="40" y="78" fill="#d7dde8" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">
+    <tspan x="40" dy="0" fill="#7ee787" xml:space="preserve">$ smritiflow scan</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">SmritiFlow scan complete · 42 files · branch main</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"> </tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">--- AGENTS.md (before) ---</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">No repository memory. Next session rebuilds context from scratch.</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"> </tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">--- generated (after) ---</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"># AGENTS.md</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">## Read Order</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">1. docs/ai/PROJECT_OVERVIEW.md</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">2. docs/ai/CURRENT_STATE.md</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">3. docs/ai/RUNBOOK.md</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"> </tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">## Important Commands</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">- pnpm build · pnpm test · pnpm lint</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"> </tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve"># PROJECT_OVERVIEW.md</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">## Tech Stack</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">### Database: postgres</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">### Testing: vitest</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">## Module Hotspots</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">- src/index.ts (17)</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">- src/cli.ts (12)</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">- src/audit/analyzer.ts (2)</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">## Repo Layout</tspan>
+    <tspan x="40" dy="20" fill="#d7dde8" xml:space="preserve">- scripts · tests · docs</tspan>
+  </text>
+</svg>

@@ -12,6 +12,7 @@ Fresh agent sessions re-read the same repository and still miss what changed, wh
 - Portfolio case study: <https://subhajitpradhan.vercel.app/projects/smritiflow>
 - Inspect the implementation: `apps/cli`, `packages/core/src`, `tests`, and `.agents/skills/smritiflow/SKILL.md`
 
+
 ## Quick Start
 
 ```bash
@@ -44,6 +45,8 @@ Both command names are supported: `smritiflow` and `sf`. Install locally with `n
 | `docs/ai/PROJECT_OVERVIEW.md` | What the project is, routes, hotspots |
 | `docs/ai/CURRENT_STATE.md` | What changed recently and which areas are active |
 | `docs/ai/RUNBOOK.md` | Install, dev, test, lint, and build commands |
+
+![SmritiFlow handoff preview](docs/assets/handoff-preview.svg)
 
 ## Behavior Notes
 
