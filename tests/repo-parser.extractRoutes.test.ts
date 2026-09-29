@@ -157,12 +157,84 @@ describe("extractRoutes", () => {
     }
   });
 
+  it("ignores embedded component demos that use a pages directory", async () => {
+    const dir = await createTempDir("smritiflow-routes-nested-pages-");
+
+    try {
+      await fs.outputFile(`${dir}/src/app/about/page.tsx`, "export default null;\n");
+      await fs.outputFile(
+        `${dir}/src/components/visualizers/demo/pages/About.tsx`,
+        "export default function About() { return null; }\n"
+      );
+      await fs.outputFile(
+        `${dir}/src/components/visualizers/demo/pages/Faq.tsx`,
+        "export default function Faq() { return null; }\n"
+      );
+
+      const routes = await extractRoutes(dir);
+
+      expect(routes).toContain("/about");
+      expect(routes.join("\n")).not.toContain("/About");
+      expect(routes.join("\n")).not.toContain("/Faq");
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+
+  it("finds routes in a workspace application", async () => {
+    const dir = await createTempDir("smritiflow-routes-workspace-");
+
+    try {
+      await fs.outputFile(`${dir}/apps/web/pages/dashboard.tsx`, "export default null;\n");
+      expect(await extractRoutes(dir)).toContain("/dashboard");
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+
   it("returns an empty list for a repository with no routes", async () => {
     const dir = await createTempDir("smritiflow-routes-none-");
 
     try {
       await fs.outputFile(`${dir}/index.js`, "console.log(1);\n");
       expect(await extractRoutes(dir)).toEqual([]);
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+});
+
+describe("extractRoutes component directories", () => {
+  it("does not report demo routes declared inside component trees", async () => {
+    const dir = await createTempDir("smritiflow-routes-components-");
+
+    try {
+      await fs.outputFile(`${dir}/src/app/page.tsx`, "export default null;\n");
+      await fs.outputFile(
+        `${dir}/src/components/visualizer/demo/server.ts`,
+        ['app.get("/register", handler);', 'app.post("/stream-tokens", handler);'].join("\n")
+      );
+
+      const routes = await extractRoutes(dir);
+
+      expect(routes).toContain("/");
+      expect(routes.join("\n")).not.toContain("/register");
+      expect(routes.join("\n")).not.toContain("/stream-tokens");
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+
+  it("still reports routes declared in an api directory", async () => {
+    const dir = await createTempDir("smritiflow-routes-api-");
+
+    try {
+      await fs.outputFile(
+        `${dir}/api/routes.ts`,
+        ['app.post("/api/orders", handler);'].join("\n")
+      );
+
+      expect(await extractRoutes(dir)).toContain("/api/orders [POST]");
     } finally {
       await fs.remove(dir);
     }

@@ -139,7 +139,7 @@ export function buildProjectMap(
     name: facts.identity.name ?? facts.pkg.name ?? path.basename(repoRoot),
     description: facts.identity.description || facts.pkg.description || "",
     root: repoRoot,
-    packageManager: facts.packageManager.name,
+    packageManager: facts.toolchain.ecosystem === "node" ? facts.packageManager.name : "none",
     toolchain: facts.toolchain,
     detectedStack: detectStack([...facts.identity.dependencies, ...facts.identity.devDependencies]),
     languages: detectLanguages(files),

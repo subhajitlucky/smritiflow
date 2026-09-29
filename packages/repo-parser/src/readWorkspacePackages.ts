@@ -2,12 +2,18 @@ import path from "node:path";
 import fs from "fs-extra";
 import type { PackageJsonLite, WorkspacePackage } from "../../shared/src/types.ts";
 import { uniqueSorted } from "../../shared/src/utils.ts";
-import { baseName } from "./languages.ts";
+import { baseName, isTestPath } from "./languages.ts";
 
 const MAX_WORKSPACE_PACKAGES = 40;
 
 function isNestedManifest(filePath: string): boolean {
-  return baseName(filePath) === "package.json" && filePath.includes("/");
+  return (
+    baseName(filePath) === "package.json" &&
+    filePath.includes("/") &&
+    // Fixtures under test/ or __tests__/ are sample projects, not packages the
+    // workspace builds; listing them produced runbook commands that were wrong.
+    !isTestPath(filePath)
+  );
 }
 
 /**
