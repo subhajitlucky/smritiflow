@@ -8,7 +8,7 @@ Read docs/ai files first.
 **Project:** smritiflow
 **Toolchain:** node (pnpm)
 **Summary:** SmritiFlow is a CLI for maintaining living repository memory for coding agents.
-**Languages:** typescript (65), javascript (1)
+**Languages:** typescript (67), javascript (1)
 **Stack:** nodejs-cli, vitest
 
 ## Read Order
@@ -24,15 +24,16 @@ Read docs/ai files first.
 - Test: `pnpm test`
 - Lint: `pnpm lint`
 - Typecheck: `pnpm typecheck`
+- Check: `pnpm check`
 - Validate: `pnpm validate`
 - Test Watch: `pnpm test:watch`
 
 ## Most Depended-Upon Modules
-- packages/shared/src/types.ts (20)
+- packages/shared/src/types.ts (21)
+- tests/helpers/tempRepo.ts (17)
 - packages/repo-parser/src/languages.ts (16)
-- tests/helpers/tempRepo.ts (16)
 - packages/shared/src/utils.ts (11)
-- packages/core/src/runScan.ts (8)
+- packages/core/src/runScan.ts (10)
 
 ## Working Agreement
 - Read the files above before exploring the repository.

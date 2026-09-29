@@ -23,7 +23,12 @@ import { extractTodos } from "../../repo-parser/src/extractTodos.ts";
 import { buildImportGraph } from "../../repo-parser/src/buildImportGraph.ts";
 import { generateOverview } from "../../generators/src/generateOverview.ts";
 import { generateCurrentState } from "../../generators/src/generateCurrentState.ts";
-import { DOCS_AI_DIR, GENERATED_FILES, SMRITI_DIR } from "../../shared/src/constants.ts";
+import {
+  ARTIFACT_SCHEMA_VERSION,
+  DOCS_AI_DIR,
+  GENERATED_FILES,
+  SMRITI_DIR,
+} from "../../shared/src/constants.ts";
 import { nowIso, uniqueSorted } from "../../shared/src/utils.ts";
 import { classifyChanges, diffHashes, type HashDiff } from "./changeDetection.ts";
 import { computeFileHashes, inferActiveAreas, summarizeReadme } from "./scanMetadata.ts";
@@ -105,6 +110,7 @@ async function runPartialRefresh(input: PartialInput): Promise<string[]> {
   const nextMap: ProjectMap = { ...previousMap };
   const nextReport: ScanReport = {
     ...previousReport,
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     fileCount: files.length,
   };
 
@@ -114,7 +120,7 @@ async function runPartialRefresh(input: PartialInput): Promise<string[]> {
   }
 
   if (categories.structureChanged) {
-    nextMap.folders = await detectFolders(repoRoot, files);
+    nextMap.folders = detectFolders(files);
     refreshedSections.push("folders");
   }
 
@@ -182,6 +188,7 @@ async function runPartialRefresh(input: PartialInput): Promise<string[]> {
   await writeCache(
     {
       ...previousCache,
+      schemaVersion: ARTIFACT_SCHEMA_VERSION,
       lastRefreshAt: nowIso(),
       lastCommit: env.lastCommit,
       hashes: input.hashes,
@@ -228,6 +235,25 @@ export async function runRefresh(
   // regeneration and reporting it as changed would be noise.
   const diff = diffHashes(previousCache.hashes ?? {}, hashes);
   const touched = normalizePaths([...diff.changed, ...diff.added, ...diff.removed]);
+  const schemaChanged =
+    previousCache.schemaVersion !== undefined && previousCache.schemaVersion !== ARTIFACT_SCHEMA_VERSION;
+
+  // An artifact written by an older schema cannot be compared against, so it is
+  // rebuilt even when no file changed. Without this the old shape would persist
+  // indefinitely on a quiet repository.
+  if (schemaChanged) {
+    await runScan(repoRoot, reporter);
+    reporter.log(`Refresh complete. Changed files: ${touched.length}`);
+    return result(
+      repoRoot,
+      "full",
+      `artifact schema changed (${ARTIFACT_SCHEMA_VERSION})`,
+      lastCommit,
+      diff,
+      touched,
+      ["full scan"]
+    );
+  }
 
   if (touched.length === 0) {
     await writeCache(
@@ -295,6 +321,7 @@ function emptyResult(
   touched: string[]
 ): RefreshCommandResult {
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "refresh",
     ok: true,
     repoRoot,
@@ -320,6 +347,7 @@ function result(
   refreshedSections: string[]
 ): RefreshCommandResult {
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "refresh",
     ok: true,
     repoRoot,

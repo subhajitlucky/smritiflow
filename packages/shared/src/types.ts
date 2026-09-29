@@ -27,6 +27,7 @@ export interface ModuleGraphSummary {
 }
 
 export interface ProjectMap {
+  schemaVersion: number;
   name: string;
   description: string;
   root: string;
@@ -53,6 +54,17 @@ export interface Toolchain {
   build: string | null;
 }
 
+export interface CheckCommandResult {
+  schemaVersion: number;
+  command: "check";
+  ok: true;
+  repoRoot: string;
+  upToDate: boolean;
+  checked: string[];
+  skipped: string[];
+  drift: Array<{ file: string; reason: string }>;
+}
+
 export interface WorkspacePackage {
   name: string;
   path: string;
@@ -64,6 +76,7 @@ export interface WorkspacePackage {
 export type RefreshMode = "full" | "partial" | "none";
 
 export interface ScanReport {
+  schemaVersion: number;
   generatedAt: string;
   branch: string;
   lastCommit: string;
@@ -79,6 +92,7 @@ export interface ScanReport {
 }
 
 export interface CacheData {
+  schemaVersion?: number;
   lastScanAt: string | null;
   lastRefreshAt: string | null;
   lastCommit?: string;
@@ -101,6 +115,7 @@ export interface PackageJsonLite {
 }
 
 export interface ScanCommandResult {
+  schemaVersion: number;
   command: "scan";
   ok: true;
   repoRoot: string;
@@ -114,6 +129,7 @@ export interface ScanCommandResult {
 }
 
 export interface RefreshCommandResult {
+  schemaVersion: number;
   command: "refresh";
   ok: true;
   repoRoot: string;
@@ -129,6 +145,7 @@ export interface RefreshCommandResult {
 }
 
 export interface StatusCommandResult {
+  schemaVersion: number;
   command: "status";
   ok: true;
   repoRoot: string;
@@ -145,6 +162,7 @@ export interface StatusCommandResult {
 }
 
 export interface ResumeCommandResult {
+  schemaVersion: number;
   command: "resume";
   ok: true;
   repoRoot: string;
@@ -157,6 +175,7 @@ export interface ResumeCommandResult {
 }
 
 export interface HookCommandResult {
+  schemaVersion: number;
   command: "hook";
   ok: true;
   event: string;

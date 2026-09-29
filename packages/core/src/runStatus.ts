@@ -7,7 +7,7 @@ import { findRepoRoot } from "../../git/src/findRepoRoot.ts";
 import { getCurrentBranch } from "../../git/src/getCurrentBranch.ts";
 import { getChangedFiles } from "../../git/src/getChangedFiles.ts";
 import { getLastCommit } from "../../git/src/getLastCommit.ts";
-import { SMRITI_DIR } from "../../shared/src/constants.ts";
+import { ARTIFACT_SCHEMA_VERSION, SMRITI_DIR } from "../../shared/src/constants.ts";
 import { readCache } from "./runScan.ts";
 
 /**
@@ -45,7 +45,8 @@ export async function runStatus(
     reporter.log(`Recommended action: smritiflow ${initialized ? "refresh" : "init"}`);
 
     return {
-      command: "status",
+      schemaVersion: ARTIFACT_SCHEMA_VERSION,
+    command: "status",
       ok: true,
       repoRoot,
       initialized,
@@ -106,6 +107,7 @@ export async function runStatus(
   }
 
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "status",
     ok: true,
     repoRoot,

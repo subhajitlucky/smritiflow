@@ -41,5 +41,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Includes `pnpm check`, which fails the build when the committed
+      # repository memory no longer describes the code.
       - name: Run validation pipeline
         run: pnpm validate

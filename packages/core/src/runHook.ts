@@ -4,7 +4,7 @@ import type { HookCommandResult, ScanReport } from "../../shared/src/types.ts";
 import { findRepoRoot } from "../../git/src/findRepoRoot.ts";
 import { getChangedFiles } from "../../git/src/getChangedFiles.ts";
 import { getLastCommit } from "../../git/src/getLastCommit.ts";
-import { DOCS_AI_DIR, SMRITI_DIR } from "../../shared/src/constants.ts";
+import { ARTIFACT_SCHEMA_VERSION, DOCS_AI_DIR, SMRITI_DIR } from "../../shared/src/constants.ts";
 import { inferActiveAreas } from "./scanMetadata.ts";
 import { readCache } from "./runScan.ts";
 
@@ -50,7 +50,8 @@ export async function runHook(
     ].join("\n");
 
     return {
-      command: "hook",
+      schemaVersion: ARTIFACT_SCHEMA_VERSION,
+    command: "hook",
       ok: true,
       event,
       repoRoot,
@@ -123,6 +124,7 @@ export async function runHook(
   }
 
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "hook",
     ok: true,
     event,

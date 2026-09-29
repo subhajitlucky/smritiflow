@@ -8,6 +8,7 @@ import { runRefresh } from "../../../packages/core/src/runRefresh.js";
 import { runStatus } from "../../../packages/core/src/runStatus.js";
 import { runResume } from "../../../packages/core/src/runResume.js";
 import { runHook } from "../../../packages/core/src/runHook.js";
+import { runCheck } from "../../../packages/core/src/runCheck.js";
 import { consoleReporter, silentReporter } from "../../../packages/core/src/reporter.js";
 
 function readCliVersion(): string {
@@ -114,6 +115,29 @@ program
       emit(result);
     } else {
       console.log(result.brief);
+    }
+  });
+
+program
+  .command("check")
+  .description("fail when committed memory no longer describes the code")
+  .action(async () => {
+    const result = await runCheck(process.cwd());
+    const asJson = globalOptions().json;
+
+    if (asJson) {
+      emit(result);
+    } else {
+      console.log(result.upToDate ? "Repository memory is up to date." : "Repository memory has drifted:");
+      for (const item of result.drift) {
+        console.log(`- ${item.file}: ${item.reason}`);
+      }
+      console.log(`Run \`smritiflow scan\` to regenerate, then commit the artifacts.`);
+      console.log(`Not compared (point-in-time snapshots): ${result.skipped.join(", ")}`);
+    }
+
+    if (!result.upToDate) {
+      process.exitCode = 1;
     }
   });
 

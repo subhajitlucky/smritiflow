@@ -35,10 +35,29 @@ Both command names are supported: `smritiflow` and `sf`. Install locally with `n
 | `status` | Report freshness and stale signals |
 | `resume` | Print a focused resume brief |
 | `hook` | Print a session-start brief for an agent harness |
+| `check` | Exit non-zero when committed memory has drifted from the code |
 
 Every command accepts a global `--json` flag (also `SMRITIFLOW_JSON=1`) and
 prints a machine-readable object instead of human text. An agent can consume
 `smritiflow status --json` directly rather than scraping prose.
+
+## Enforcing Freshness In CI
+
+`smritiflow check` fails when the committed `docs/ai/*`, `AGENTS.md`, and
+`.smritiflow/project-map.json` no longer match what a fresh scan would produce.
+It runs as part of `pnpm validate`, so CI fails on drift.
+
+This is a **drift** check rather than a staleness check. Staleness compares a
+scan against your local working tree and is meaningless in CI, where the
+fingerprint baseline is gitignored and the tree is whatever the commit contains.
+Drift is the enforceable property: the committed documents should describe the
+committed code.
+
+`check` never writes. Running it cannot make a drifted repository look clean.
+
+Point-in-time snapshots are excluded by design, since a fresh generation can
+never match them: `docs/ai/CURRENT_STATE.md`, `.smritiflow/scan-report.json`, and
+`.smritiflow/cache.json`.
 
 ## Wiring It Into an Agent Harness
 
@@ -68,11 +87,19 @@ harness runs.
 
 ![SmritiFlow handoff preview](docs/assets/handoff-preview.svg)
 
+## Artifact Schema
+
+Every `--json` result and every artifact file records `schemaVersion`, currently
+`2`. Bump `ARTIFACT_SCHEMA_VERSION` when a field is removed, renamed, or changes
+meaning. A cache written by an older schema is rebuilt rather than compared, so
+an upgrade never silently reads a stale shape.
+
 ## Behavior Notes
 
 - **Content-fingerprint refresh**: `refresh` compares SHA-256 fingerprints of every hashable file against the previous run. Change detection therefore does not depend on git: repositories without git history, and repositories whose recorded commit was rewritten by a rebase, still detect edits correctly. Git supplies branch, commit, and recent-commit metadata only.
 - **Self-excluding output**: SmritiFlow never fingerprints its own generated files, so a scan cannot report its own output as a repository change.
-- **Targeted refresh**: a partial refresh re-runs only the analyzers whose inputs changed. Manifest changes, fingerprint-strategy changes, and very large change sets fall back to a full scan.
+- **Targeted refresh**: a partial refresh re-runs only the analyzers whose inputs changed. Manifest changes, fingerprint-strategy changes, schema changes, and very large change sets fall back to a full scan.
+- **Idempotent scans**: consecutive scans of an unchanged repository produce identical artifacts. SmritiFlow's own output is excluded from the file tree and the layout analysis, so a scan never reports files that its own previous run created.
 - **Ignore handling**: scans respect the repository `.gitignore` and always exclude `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, `.turbo/`, `.smritiflow/`, and `docs/ai/` at any depth. Hidden directories such as `.github/` are included.
 - **Multi-language**: source, config, and manifest classification covers TypeScript, JavaScript, Vue, Svelte, Astro, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Swift, C#, Scala, Dart, Elixir, shell, SQL, GraphQL, protobuf, and Terraform. Routes are detected from filesystem conventions (Next.js app and pages routers) and from declarations in FastAPI, Flask, Express, Fastify, Koa, Spring, Go `net/http`, and Rails. Runbooks and `AGENTS.md` blocks use the toolchain actually present — `uv`, `poetry`, `pip`, `go`, `cargo`, `bundler`, `composer`, `maven`, `gradle`, or a Node package manager — instead of assuming `npm` or `pnpm`.
 - **Honest import graph**: every import edge is resolved to a file, deduplicated, and ranked by inbound usage, so "most depended-upon modules" means what it says. External packages, import cycles (Tarjan), and never-imported files are reported separately.
@@ -111,7 +138,7 @@ pnpm install
 pnpm validate        # typecheck, tests, and build
 ```
 
-Individual commands: `pnpm dev`, `pnpm typecheck`, `pnpm test`, `pnpm build`.
+Individual commands: `pnpm dev`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check`.
 
 ## Releases
 

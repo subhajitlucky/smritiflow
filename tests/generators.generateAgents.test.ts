@@ -8,6 +8,7 @@ import {
 } from "../packages/generators/src/generateAgents.ts";
 
 const BASE_MAP: ProjectMap = {
+  schemaVersion: 2,
   name: "acme-api",
   description: "Billing API for Acme customers.",
   root: "/repo",

@@ -7,11 +7,12 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter ./apps/cli dev",
+    "check": "tsx apps/cli/src/index.ts check",
     "lint": "pnpm typecheck",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate": "pnpm typecheck && pnpm test && pnpm build"
+    "validate": "pnpm typecheck && pnpm test && pnpm build && pnpm check"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
