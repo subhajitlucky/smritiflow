@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "fs-extra";
 import type {
   CacheData,
+  FolderInfo,
   ProjectMap,
   ScanCommandResult,
   ScanReport,
@@ -34,7 +35,7 @@ import { generateCurrentState } from "../../generators/src/generateCurrentState.
 import { generateRunbook } from "../../generators/src/generateRunbook.ts";
 import { generateAgents, type ProjectContext } from "../../generators/src/generateAgents.ts";
 import { writeArtifacts } from "../../generators/src/writeArtifacts.ts";
-import { GENERATED_FILES, SMRITI_DIR } from "../../shared/src/constants.ts";
+import { ARTIFACT_SCHEMA_VERSION, GENERATED_FILES, SMRITI_DIR } from "../../shared/src/constants.ts";
 import { isSourcePath } from "../../repo-parser/src/languages.ts";
 import { nowIso, uniqueSorted } from "../../shared/src/utils.ts";
 import { computeFileHashes, inferActiveAreas, summarizeReadme } from "./scanMetadata.ts";
@@ -43,7 +44,7 @@ export interface ProjectFacts {
   pkg: Awaited<ReturnType<typeof readPackageJson>>;
   packageManager: PackageManagerInfo;
   configs: string[];
-  folders: Awaited<ReturnType<typeof detectFolders>>;
+  folders: FolderInfo[];
   readme: string;
   routes: string[];
   branch: string;
@@ -97,7 +98,7 @@ export async function collectProjectFacts(
   ] = await Promise.all([
     detectPackageManager(repoRoot, pkg),
     readConfigs(repoRoot, files),
-    detectFolders(repoRoot, files),
+    detectFolders(files),
     readReadme(repoRoot, files),
     extractRoutes(repoRoot),
     getCurrentBranch(repoRoot),
@@ -136,6 +137,7 @@ export function buildProjectMap(
   facts: ProjectFacts
 ): ProjectMap {
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     name: facts.identity.name ?? facts.pkg.name ?? path.basename(repoRoot),
     description: facts.identity.description || facts.pkg.description || "",
     root: repoRoot,
@@ -179,6 +181,7 @@ export async function runScan(
   const { hashes, strategy } = await computeFileHashes(repoRoot, files);
 
   const scanReport: ScanReport = {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     generatedAt: nowIso(),
     branch: facts.branch,
     lastCommit: facts.lastCommit,
@@ -197,6 +200,7 @@ export async function runScan(
 
   const cache: CacheData = {
     ...(prevCache ?? { lastScanAt: null, lastRefreshAt: null }),
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     lastScanAt: scanReport.generatedAt,
     lastCommit: facts.lastCommit,
     hashes,
@@ -221,6 +225,7 @@ export async function runScan(
   });
 
   const result: ScanCommandResult = {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "scan",
     ok: true,
     repoRoot,

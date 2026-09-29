@@ -33,8 +33,8 @@ smritiflow hook session-start
 
 Both command names are supported:
 
-- `smritiflow init|scan|refresh|status|resume|hook`
-- `sf init|scan|refresh|status|resume|hook`
+- `smritiflow init|scan|refresh|status|resume|hook|check`
+- `sf init|scan|refresh|status|resume|hook|check`
 
 If SmritiFlow is not installed, the normal install path is:
 
@@ -69,6 +69,10 @@ no human text mixed in. Prefer it over parsing prose.
 | `resume --json` | `readFirst`, `activeAreas`, `changedFiles`, `todos`, `nextSteps` |
 | `scan --json` | `fileCount`, `sourceFileCount`, `routeCount`, `todoCount` |
 | `hook --json` | `stale`, `readFirst`, `activeAreas`, `brief` |
+| `check --json` | `upToDate`, `drift` (exits 1 when memory has drifted) |
+
+Every payload carries `schemaVersion`. Treat an unexpected value as a reason to
+fall back to the `docs/ai/*.md` summaries rather than guessing field meanings.
 
 `docs/ai/CURRENT_STATE.md` lists open `TODO`, `FIXME`, `HACK`, `XXX`, `BUG`, and
 `OPTIMIZE` markers with file and line numbers. Read them before planning work:

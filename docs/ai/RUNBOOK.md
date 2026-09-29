@@ -12,8 +12,9 @@
 - typecheck: `pnpm typecheck`
 
 ## All Scripts
+- check: `pnpm check` — tsx apps/cli/src/index.ts check
 - test:watch: `pnpm test:watch` — vitest
-- validate: `pnpm validate` — pnpm typecheck && pnpm test && pnpm build
+- validate: `pnpm validate` — pnpm typecheck && pnpm test && pnpm build && pnpm check
 
 ## Workspace Packages
 - smritiflow: `pnpm --filter smritiflow dev` (or `cd apps/cli`)

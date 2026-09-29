@@ -5,7 +5,7 @@ import type { Reporter } from "./reporter.ts";
 import { consoleReporter } from "./reporter.ts";
 import { findRepoRoot } from "../../git/src/findRepoRoot.ts";
 import { getChangedFiles } from "../../git/src/getChangedFiles.ts";
-import { DOCS_AI_DIR, SMRITI_DIR } from "../../shared/src/constants.ts";
+import { ARTIFACT_SCHEMA_VERSION, DOCS_AI_DIR, SMRITI_DIR } from "../../shared/src/constants.ts";
 import { inferActiveAreas } from "./scanMetadata.ts";
 import type { ScanReport } from "../../shared/src/types.ts";
 
@@ -31,7 +31,8 @@ export async function runResume(
   if (!(await fs.pathExists(scanReportPath))) {
     reporter.log("No scan report found. Run: smritiflow scan");
     return {
-      command: "resume",
+      schemaVersion: ARTIFACT_SCHEMA_VERSION,
+    command: "resume",
       ok: true,
       repoRoot,
       readFirst: READ_ORDER,
@@ -114,6 +115,7 @@ export async function runResume(
   }
 
   return {
+    schemaVersion: ARTIFACT_SCHEMA_VERSION,
     command: "resume",
     ok: true,
     repoRoot,

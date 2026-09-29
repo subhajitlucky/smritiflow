@@ -6,6 +6,11 @@ import ignore, { type Ignore } from "ignore";
  * Gitignore-style rules applied to every scanned path. Patterns without a slash
  * match at any depth (so nested node_modules/dist directories are excluded), while
  * paths like .smritiflow/ and docs/ai/ stay anchored to the repository root.
+ *
+ * The root AGENTS.md is excluded because SmritiFlow writes it. Counting it as
+ * repository content meant the first scan of a fresh repository reported one
+ * fewer file than every scan after it. Nested AGENTS.md files are left alone,
+ * since those belong to the repository.
  */
 const BUILT_IN_IGNORES = [
   ".git/",
@@ -17,6 +22,7 @@ const BUILT_IN_IGNORES = [
   ".turbo/",
   ".smritiflow/",
   "docs/ai/",
+  "/AGENTS.md",
   "*.tgz",
   "*.log",
   ".DS_Store"
@@ -35,7 +41,8 @@ export const FAST_GLOB_PRUNE_PATTERNS = [
   "**/coverage/**",
   "**/.turbo/**",
   ".smritiflow/**",
-  "docs/ai/**"
+  "docs/ai/**",
+  "AGENTS.md"
 ];
 
 export async function loadIgnoreRules(repoRoot: string): Promise<Ignore> {

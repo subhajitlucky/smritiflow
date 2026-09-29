@@ -1,3 +1,13 @@
+/**
+ * Version of the machine-readable contract: the command results, the artifact
+ * files, and the document sections that are generated from them.
+ *
+ * Bump this when a field is removed, renamed, or changes meaning, so consumers
+ * can detect it instead of silently reading the wrong value. 0.1 artifacts
+ * predate the field and are treated as an unknown version.
+ */
+export const ARTIFACT_SCHEMA_VERSION = 2;
+
 export const SMRITI_DIR = ".smritiflow";
 export const DOCS_AI_DIR = "docs/ai";
 

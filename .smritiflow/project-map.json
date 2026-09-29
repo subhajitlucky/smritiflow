@@ -1,4 +1,5 @@
 {
+  "schemaVersion": 2,
   "name": "smritiflow",
   "description": "",
   "root": "/home/subhajit/project/smritiflow",
@@ -27,7 +28,7 @@
   "languages": [
     {
       "language": "typescript",
-      "files": 65
+      "files": 67
     },
     {
       "language": "javascript",
@@ -37,11 +38,12 @@
   "scripts": {
     "build": "pnpm -r build",
     "dev": "pnpm --filter ./apps/cli dev",
+    "check": "tsx apps/cli/src/index.ts check",
     "lint": "pnpm typecheck",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "validate": "pnpm typecheck && pnpm test && pnpm build"
+    "validate": "pnpm typecheck && pnpm test && pnpm build && pnpm check"
   },
   "folders": [
     {
@@ -109,22 +111,22 @@
   "routes": [],
   "entryPoints": [],
   "moduleGraph": {
-    "nodes": 66,
-    "edges": 171,
+    "nodes": 68,
+    "edges": 184,
     "hotspots": [
-      "packages/shared/src/types.ts (20)",
+      "packages/shared/src/types.ts (21)",
+      "tests/helpers/tempRepo.ts (17)",
       "packages/repo-parser/src/languages.ts (16)",
-      "tests/helpers/tempRepo.ts (16)",
       "packages/shared/src/utils.ts (11)",
-      "packages/core/src/runScan.ts (8)",
-      "packages/git/src/findRepoRoot.ts (7)",
-      "packages/shared/src/constants.ts (7)",
-      "packages/core/src/scanMetadata.ts (6)"
+      "packages/core/src/runScan.ts (10)",
+      "packages/git/src/findRepoRoot.ts (8)",
+      "packages/shared/src/constants.ts (8)",
+      "packages/core/src/scanMetadata.ts (7)"
     ],
     "externalDependencies": [
-      "node:path (40)",
-      "fs-extra (39)",
-      "vitest (20)",
+      "node:path (41)",
+      "fs-extra (40)",
+      "vitest (21)",
       "simple-git (8)",
       "fast-glob (2)",
       "node:crypto (2)",
@@ -139,10 +141,10 @@
       "tests/cli.bin-alias.test.ts",
       "tests/cli.json-output.test.ts",
       "tests/core.changeDetection.test.ts",
+      "tests/core.check.test.ts",
       "tests/core.init.integration.test.ts",
       "tests/core.refresh-status-resume.integration.test.ts",
-      "tests/core.scan.integration.test.ts",
-      "tests/core.scan.nogit.integration.test.ts"
+      "tests/core.scan.integration.test.ts"
     ]
   }
 }

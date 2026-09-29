@@ -1,5 +1,3 @@
-import path from "node:path";
-import fs from "fs-extra";
 import type { FolderInfo } from "../../shared/src/types.ts";
 
 const FOLDER_RULES: Array<{ path: string; purpose: string }> = [
@@ -41,26 +39,23 @@ const FOLDER_RULES: Array<{ path: string; purpose: string }> = [
 ];
 
 /**
- * Reports directories that exist and carry a known purpose. Matching is done
- * against repo-relative paths so workspace layouts like `apps/web/src` are
- * described through their most specific rule rather than the generic `src`.
+ * Reports directories that carry a known purpose, derived solely from the
+ * scanned file list.
+ *
+ * Falling back to an existence probe made the result depend on SmritiFlow's own
+ * output: the first scan of a repository without a `docs/` directory writes
+ * `docs/ai/`, so a second scan reported a `docs` folder the first had not seen.
+ * Deriving from scanned files keeps consecutive scans identical.
  */
-export async function detectFolders(repoRoot: string, files: string[]): Promise<FolderInfo[]> {
+export function detectFolders(files: string[]): FolderInfo[] {
   const known = new Set<string>();
+
   for (const file of files) {
     const segments = file.replaceAll("\\", "/").split("/");
-    for (let i = 1; i < segments.length; i += 1) {
-      known.add(segments.slice(0, i).join("/"));
+    for (let index = 1; index < segments.length; index += 1) {
+      known.add(segments.slice(0, index).join("/"));
     }
   }
 
-  const found: FolderInfo[] = [];
-
-  for (const rule of FOLDER_RULES) {
-    if (known.has(rule.path) || (await fs.pathExists(path.join(repoRoot, rule.path)))) {
-      found.push(rule);
-    }
-  }
-
-  return found;
+  return FOLDER_RULES.filter((rule) => known.has(rule.path));
 }
