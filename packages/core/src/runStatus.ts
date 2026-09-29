@@ -92,7 +92,10 @@ export async function runStatus(
   reporter.log(`- Last refresh: ${cache.lastRefreshAt ?? "never"}`);
   reporter.log(`- Last scanned commit: ${cache.lastCommit ?? "unknown"}`);
   reporter.log(`- Current commit: ${currentCommit}`);
-  reporter.log(`- Fingerprint strategy: ${cache.hashStrategy ?? "unknown"}`);
+  const strategy = cache.hashStrategy ?? "unknown";
+  reporter.log(
+    `- Fingerprint strategy: ${strategy}${strategy === "stat" ? " (mtime+size; large repository)" : ""}`
+  );
   reporter.log(`- Tracked fingerprints: ${Object.keys(cache.hashes ?? {}).length}`);
   reporter.log(`- Changed files: ${changedFiles.length}`);
   reporter.log(`- Stale: ${stale ? "yes" : "no"}`);

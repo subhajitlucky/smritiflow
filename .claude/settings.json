@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx tsx apps/cli/src/index.ts hook session-start || true"
+          }
+        ]
+      }
+    ]
+  }
+}
