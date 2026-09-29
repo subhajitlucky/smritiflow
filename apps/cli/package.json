@@ -1,6 +1,6 @@
 {
   "name": "smritiflow",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "Repository-memory CLI that scans a codebase and generates structured handoff artifacts for coding agents.",
   "type": "module",
   "license": "MIT",

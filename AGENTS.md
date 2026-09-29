@@ -2,39 +2,42 @@
 
 Read docs/ai files first.
 
-## Project Summary
-SmritiFlow keeps living repo memory for coding agents.
+<!-- smritiflow:begin -->
+## Repository Memory
+
+**Project:** smritiflow
+**Toolchain:** node (pnpm)
+**Summary:** SmritiFlow is a CLI for maintaining living repository memory for coding agents.
+**Languages:** typescript (65), javascript (1)
+**Stack:** nodejs-cli, vitest
 
 ## Read Order
 1. docs/ai/PROJECT_OVERVIEW.md
 2. docs/ai/CURRENT_STATE.md
 3. docs/ai/RUNBOOK.md
 4. .smritiflow/scan-report.json
-5. .agents/skills/smritiflow/SKILL.md
 
-## Important Commands
-- pnpm build
-- pnpm dev
-- pnpm lint
-- pnpm typecheck
-- pnpm test
-- pnpm test:watch
-- pnpm dev init
-- pnpm dev scan
-- pnpm dev refresh
-- pnpm dev status
-- pnpm dev resume
+## Commands
+- Install: `pnpm install`
+- Dev: `pnpm dev`
+- Build: `pnpm build`
+- Test: `pnpm test`
+- Lint: `pnpm lint`
+- Typecheck: `pnpm typecheck`
+- Validate: `pnpm validate`
+- Test Watch: `pnpm test:watch`
 
-## Agent Resume Workflow
-- Start with `smritiflow status`.
-- If stale, run `smritiflow refresh` before coding.
-- Use `smritiflow resume` to get active areas and next actions.
+## Most Depended-Upon Modules
+- packages/shared/src/types.ts (20)
+- packages/repo-parser/src/languages.ts (16)
+- tests/helpers/tempRepo.ts (16)
+- packages/shared/src/utils.ts (11)
+- packages/core/src/runScan.ts (8)
 
-## Coding Agent Contract
-- Prefer deterministic facts from JSON artifacts over assumptions.
-- Refresh docs after meaningful code changes.
-- Keep edits scoped to active areas when possible.
-
-## High-Risk Areas
-- Generated docs can become stale after code changes.
-- Re-run scan/refresh before agent implementation work.
+## Working Agreement
+- Read the files above before exploring the repository.
+- Prefer facts recorded in `.smritiflow/*.json` over assumptions.
+- Run `smritiflow refresh` after meaningful code changes so this block stays accurate.
+- Run `smritiflow status` before starting work to check whether this block is stale.
+- If SmritiFlow is not installed globally, use `pnpm dlx smritiflow <command>`.
+<!-- smritiflow:end -->

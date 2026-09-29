@@ -22,7 +22,7 @@ export function mergeManagedBlock(existing: string | null, generated: string): s
   if (start !== -1 && end !== -1 && end > start) {
     const before = existing.slice(0, start);
     const after = existing.slice(end + AGENTS_BLOCK_END.length).replace(/^\n/, "");
-    return `${before}${block}${after}`;
+    return `${before}${block}${after}`.replace(/\n+$/, "\n");
   }
 
   return `${existing.trimEnd()}\n\n${block}`;

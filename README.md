@@ -22,6 +22,7 @@ smritiflow scan                # before substantial work
 smritiflow status              # before resuming
 smritiflow refresh             # after meaningful changes
 smritiflow resume              # when returning to the codebase
+smritiflow hook                # at agent session start
 ```
 
 Both command names are supported: `smritiflow` and `sf`. Install locally with `npm install --save-dev smritiflow` and run through `npx smritiflow <command>`.
@@ -33,12 +34,31 @@ Both command names are supported: `smritiflow` and `sf`. Install locally with `n
 | `refresh` | Update memory after repository changes |
 | `status` | Report freshness and stale signals |
 | `resume` | Print a focused resume brief |
+| `hook` | Print a session-start brief for an agent harness |
+
+Every command accepts a global `--json` flag (also `SMRITIFLOW_JSON=1`) and
+prints a machine-readable object instead of human text. An agent can consume
+`smritiflow status --json` directly rather than scraping prose.
+
+## Wiring It Into an Agent Harness
+
+`smritiflow hook` exists so memory arrives without the agent having to ask for
+it. Point a session-start hook at it:
+
+```bash
+smritiflow hook session-start
+```
+
+The brief states whether memory is fresh, which files to read first, the active
+areas, the uncommitted changes, and any open TODO/FIXME markers. Wire it as a
+SessionStart hook in Claude Code, or call it from whatever bootstrap step your
+harness runs.
 
 ## What It Generates
 
 | Artifact | Contents |
 | --- | --- |
-| `.smritiflow/cache.json` | Last scan/refresh times, recorded commit, file hashes |
+| `.smritiflow/cache.json` | Last scan/refresh times, recorded commit, content fingerprints |
 | `.smritiflow/project-map.json` | Detected stack, routes, module-graph hotspots |
 | `.smritiflow/scan-report.json` | Branch, commit, recent commits, changed files, active areas, stale warnings |
 | `AGENTS.md` | Managed memory block between SmritiFlow markers |
@@ -50,9 +70,26 @@ Both command names are supported: `smritiflow` and `sf`. Install locally with `n
 
 ## Behavior Notes
 
-- **Commit-aware refresh**: `refresh` compares the commit recorded in `.smritiflow/cache.json` with HEAD, so changes made in commits are detected, not only uncommitted working-tree edits. If the recorded commit is no longer reachable (rebase or force-push), it falls back to a full scan.
+- **Content-fingerprint refresh**: `refresh` compares SHA-256 fingerprints of every hashable file against the previous run. Change detection therefore does not depend on git: repositories without git history, and repositories whose recorded commit was rewritten by a rebase, still detect edits correctly. Git supplies branch, commit, and recent-commit metadata only.
+- **Self-excluding output**: SmritiFlow never fingerprints its own generated files, so a scan cannot report its own output as a repository change.
+- **Targeted refresh**: a partial refresh re-runs only the analyzers whose inputs changed. Manifest changes, fingerprint-strategy changes, and very large change sets fall back to a full scan.
 - **Ignore handling**: scans respect the repository `.gitignore` and always exclude `node_modules/`, `dist/`, `build/`, `.next/`, `coverage/`, `.turbo/`, `.smritiflow/`, and `docs/ai/` at any depth. Hidden directories such as `.github/` are included.
+- **Multi-language**: source, config, and manifest classification covers TypeScript, JavaScript, Vue, Svelte, Astro, Python, Go, Rust, Ruby, PHP, Java, Kotlin, Swift, C#, Scala, Dart, Elixir, shell, SQL, GraphQL, protobuf, and Terraform. Routes are detected from filesystem conventions (Next.js app and pages routers) and from declarations in FastAPI, Flask, Express, Fastify, Koa, Spring, Go `net/http`, and Rails. Runbooks and `AGENTS.md` blocks use the toolchain actually present — `uv`, `poetry`, `pip`, `go`, `cargo`, `bundler`, `composer`, `maven`, `gradle`, or a Node package manager — instead of assuming `npm` or `pnpm`.
+- **Honest import graph**: every import edge is resolved to a file, deduplicated, and ranked by inbound usage, so "most depended-upon modules" means what it says. External packages, import cycles (Tarjan), and never-imported files are reported separately.
+- **Test files are excluded** from route and marker detection, so fixtures containing `app.get("/health")` are not reported as real routes.
 - **Merge-safe `AGENTS.md`**: generated content lives inside `<!-- smritiflow:begin -->` / `<!-- smritiflow:end -->` markers. Hand-written content outside the block is preserved, and files without markers receive the managed block appended instead of being overwritten.
+
+## Upgrading From 0.1.x
+
+0.1 wrote its generated `AGENTS.md` block without markers. On 0.2 that old block
+sits above `<!-- smritiflow:begin -->` and is preserved as hand-written content,
+because the merge cannot tell generated text from yours. Delete it once, by
+hand, after your first scan on 0.2.
+
+0.2 also changes artifact schemas (`ScanReport` gains `addedFiles`,
+`removedFiles`, `todos`, and `notes`; `CacheData` gains `hashStrategy`), and
+`staleWarnings` now means staleness only. `.smritiflow/cache.json` is now
+gitignored, so a fresh clone rebuilds its baseline on the first `refresh`.
 
 ## Agent Skill
 
@@ -87,7 +124,7 @@ Releases publish to npm through the GitHub Actions workflow (OIDC trusted publis
 
 ## Testing
 
-Automated coverage includes repository root detection, stack detection heuristics, route extraction, full scan artifact generation, and refresh/status/resume integration flows.
+Automated coverage includes repository root detection, language and config classification, package manager and toolchain detection, project identity parsing across manifests, stack detection heuristics, route extraction across frameworks, import-graph resolution with cycles, marker extraction, generated-document content, content-fingerprint change detection with and without git, and the scan/refresh/status/resume/hook flows including `--json` output.
 
 ## Requirements
 

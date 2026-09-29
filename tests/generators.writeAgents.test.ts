@@ -9,7 +9,7 @@ import {
 import { runScan } from "../packages/core/src/runScan.ts";
 import { createTempRepo } from "./helpers/tempRepo.ts";
 
-const generated = "## SmritiFlow Memory\n\nRead docs/ai files first.";
+const generated = "## Repository Memory\n\nRead docs/ai files first.";
 
 describe("mergeManagedBlock", () => {
   it("wraps generated content in markers for new files", () => {
@@ -34,7 +34,7 @@ describe("mergeManagedBlock", () => {
       "",
       "Before the block.",
       AGENTS_BLOCK_BEGIN,
-      "## SmritiFlow Memory",
+      "## Repository Memory",
       "",
       "old generated content",
       AGENTS_BLOCK_END,
@@ -70,7 +70,7 @@ describe("scan AGENTS.md writing", () => {
       const agentsText = await fs.readFile(path.join(repoRoot, "AGENTS.md"), "utf8");
 
       expect(agentsText).toContain("Never delete this section.");
-      expect(agentsText).toContain("SmritiFlow Memory");
+      expect(agentsText).toContain("## Repository Memory");
       expect(agentsText.split(AGENTS_BLOCK_BEGIN)).toHaveLength(2);
     } finally {
       await cleanup();

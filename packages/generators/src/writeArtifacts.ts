@@ -16,6 +16,10 @@ interface WriteArtifactsInput {
   };
 }
 
+function writeDoc(filePath: string, content: string): Promise<void> {
+  return fs.writeFile(filePath, `${content.trimEnd()}\n`);
+}
+
 export async function writeArtifacts(input: WriteArtifactsInput): Promise<void> {
   const smritiDir = path.join(input.repoRoot, ".smritiflow");
   const docsDir = path.join(input.repoRoot, "docs", "ai");
@@ -36,7 +40,7 @@ export async function writeArtifacts(input: WriteArtifactsInput): Promise<void> 
   });
 
   await writeAgentsFile(input.repoRoot, input.docs.agents);
-  await fs.writeFile(path.join(docsDir, "PROJECT_OVERVIEW.md"), input.docs.overview);
-  await fs.writeFile(path.join(docsDir, "CURRENT_STATE.md"), input.docs.currentState);
-  await fs.writeFile(path.join(docsDir, "RUNBOOK.md"), input.docs.runbook);
+  await writeDoc(path.join(docsDir, "PROJECT_OVERVIEW.md"), input.docs.overview);
+  await writeDoc(path.join(docsDir, "CURRENT_STATE.md"), input.docs.currentState);
+  await writeDoc(path.join(docsDir, "RUNBOOK.md"), input.docs.runbook);
 }

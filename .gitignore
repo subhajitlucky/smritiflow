@@ -7,3 +7,7 @@ coverage/
 *.tsbuildinfo
 
 *.tgz
+
+# Per-machine scan baseline (content fingerprints). The shareable artifacts are
+# .smritiflow/project-map.json, .smritiflow/scan-report.json, and docs/ai/*.md.
+.smritiflow/cache.json
