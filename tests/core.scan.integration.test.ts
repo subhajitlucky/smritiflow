@@ -60,10 +60,12 @@ describe("runScan integration", () => {
       expect(Array.isArray(projectMap.routes)).toBe(true);
       expect(projectMap.moduleGraph).toBeTruthy();
 
-      expect(overview).toContain("## Tech Stack");
-      expect(overview).toContain("## Architecture Summary");
-      expect(runbook).toContain("## Dev");
-      expect(runbook).toContain("## Build");
+      expect(overview).toContain("## Stack");
+      expect(overview).toContain("## Dependency Graph");
+      expect(overview).toContain("## Route Surface");
+      expect(runbook).toContain("## Commands");
+      expect(runbook).toContain("npm run dev");
+      expect(runbook).toContain("npm run build");
     } finally {
       await cleanup();
     }

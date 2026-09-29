@@ -1,11 +1,8 @@
 import type { ProjectMap, ScanReport } from "../../shared/src/types.ts";
+import { describeProject } from "./generateAgents.ts";
 
-function formatList(items: string[]): string {
-  if (items.length === 0) {
-    return "- none detected";
-  }
-
-  return items.map((item) => `- ${item}`).join("\n");
+function formatList(items: string[]): string[] {
+  return items.length === 0 ? ["- none detected"] : items.map((item) => `- ${item}`);
 }
 
 export function generateOverview(
@@ -13,54 +10,106 @@ export function generateOverview(
   scanReport: ScanReport,
   readmeSummary: string
 ): string {
-  const routes =
-    projectMap.routes.length === 0
-      ? ["- no routes detected"]
-      : projectMap.routes.map((route) => `- ${route}`);
+  const lines: string[] = ["# Project Overview", ""];
 
-  const hotspots =
-    projectMap.moduleGraph.hotspots.length === 0
-      ? ["- no internal import hotspots found"]
-      : projectMap.moduleGraph.hotspots.map((spot) => `- ${spot}`);
+  lines.push("## What This Project Is");
+  lines.push(readmeSummary.length > 0 ? readmeSummary : describeProject(projectMap));
+  lines.push("");
 
-  return [
-    "# Project Overview",
-    "",
-    "## What This Project Is",
-    readmeSummary || "Repository memory system for coding agents.",
-    "",
-    "## Tech Stack",
-    "### Frontend",
-    formatList(projectMap.detectedStack.frontend),
-    "",
-    "### Backend",
-    formatList(projectMap.detectedStack.backend),
-    "",
-    "### Database",
-    formatList(projectMap.detectedStack.database),
-    "",
-    "### Testing",
-    formatList(projectMap.detectedStack.testing),
-    "",
-    "## Repo Layout",
-    ...projectMap.folders.map((f) => `- ${f.path}: ${f.purpose}`),
-    "",
-    "## Architecture Summary",
-    `- Internal source files: ${projectMap.moduleGraph.nodes}`,
-    `- Internal import edges: ${projectMap.moduleGraph.edges}`,
-    "",
-    "### Route Surface",
-    ...routes,
-    "",
-    "### Module Hotspots",
-    ...hotspots,
-    "",
-    "## Important Configs",
-    ...projectMap.configs.map((cfg) => `- ${cfg}`),
-    "",
-    "## Current Maturity",
-    `- Last scan: ${scanReport.generatedAt}`,
-    `- Files scanned: ${scanReport.fileCount}`,
-    `- Branch: ${scanReport.branch}`,
-  ].join("\n");
+  lines.push("## Stack");
+  lines.push(`- Toolchain: ${projectMap.toolchain.ecosystem} (${projectMap.toolchain.manager})`);
+  lines.push(
+    `- Languages: ${
+      projectMap.languages.length > 0
+        ? projectMap.languages.map((entry) => `${entry.language} (${entry.files})`).join(", ")
+        : "none detected"
+    }`
+  );
+  lines.push("");
+  lines.push("### Frontend");
+  lines.push(...formatList(projectMap.detectedStack.frontend));
+  lines.push("");
+  lines.push("### Backend");
+  lines.push(...formatList(projectMap.detectedStack.backend));
+  lines.push("");
+  lines.push("### Database");
+  lines.push(...formatList(projectMap.detectedStack.database));
+  lines.push("");
+  lines.push("### Testing");
+  lines.push(...formatList(projectMap.detectedStack.testing));
+  lines.push("");
+
+  lines.push("## Layout");
+  lines.push(
+    ...(projectMap.folders.length > 0
+      ? projectMap.folders.map((folder) => `- ${folder.path}: ${folder.purpose}`)
+      : ["- no known layout directories detected"])
+  );
+  lines.push("");
+
+  lines.push("## Dependency Graph");
+  lines.push(`- Internal source files: ${projectMap.moduleGraph.nodes}`);
+  lines.push(`- Internal import edges: ${projectMap.moduleGraph.edges}`);
+  lines.push("");
+
+  if (projectMap.moduleGraph.hotspots.length > 0) {
+    lines.push("### Most Depended-Upon Modules");
+    lines.push(...projectMap.moduleGraph.hotspots.map((spot) => `- ${spot}`));
+    lines.push("");
+  }
+
+  if (projectMap.moduleGraph.externalDependencies.length > 0) {
+    lines.push("### Most-Used External Modules");
+    lines.push(...projectMap.moduleGraph.externalDependencies.map((dep) => `- ${dep}`));
+    lines.push("");
+  }
+
+  if (projectMap.moduleGraph.cycles.length > 0) {
+    lines.push("### Import Cycles");
+    for (const cycle of projectMap.moduleGraph.cycles) {
+      lines.push(`- ${cycle.join(" -> ")}`);
+    }
+    lines.push("");
+  }
+
+  if (projectMap.entryPoints.length > 0) {
+    lines.push("## Start Reading Here");
+    lines.push(...projectMap.entryPoints.map((entry) => `- ${entry}`));
+    lines.push("");
+  }
+
+  if (projectMap.workspacePackages.length > 0) {
+    lines.push("## Workspace Packages");
+    for (const entry of projectMap.workspacePackages) {
+      const scripts = Object.keys(entry.scripts);
+      lines.push(
+        `- ${entry.name} (${entry.path})${scripts.length > 0 ? `: ${scripts.join(", ")}` : ""}`
+      );
+    }
+    lines.push("");
+  }
+
+  lines.push("## Route Surface");
+  lines.push(
+    ...(projectMap.routes.length > 0
+      ? projectMap.routes.map((route) => `- ${route}`)
+      : ["- no routes detected"])
+  );
+  lines.push("");
+
+  lines.push("## Configuration");
+  lines.push(
+    ...(projectMap.configs.length > 0
+      ? projectMap.configs.map((config) => `- ${config}`)
+      : ["- no configuration files detected"])
+  );
+  lines.push("");
+
+  lines.push("## Snapshot");
+  lines.push(`- Generated: ${scanReport.generatedAt}`);
+  lines.push(`- Files scanned: ${scanReport.fileCount}`);
+  lines.push(`- Branch: ${scanReport.branch}`);
+  lines.push(`- Commit: ${scanReport.lastCommit}`);
+
+  return lines.join("\n");
 }

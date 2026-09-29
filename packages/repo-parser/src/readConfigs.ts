@@ -1,22 +1,17 @@
-import path from "node:path";
-import fs from "fs-extra";
-import fg from "fast-glob";
-import { CONFIG_CANDIDATES } from "../../shared/src/constants.ts";
+import { isConfigPath, isManifestPath } from "./languages.ts";
 import { uniqueSorted } from "../../shared/src/utils.ts";
 
-export async function readConfigs(repoRoot: string): Promise<string[]> {
-  const fixedHits: string[] = [];
-  for (const candidate of CONFIG_CANDIDATES) {
-    const fullPath = path.join(repoRoot, candidate);
-    if (await fs.pathExists(fullPath)) {
-      fixedHits.push(candidate);
-    }
+/**
+ * Lists configuration and manifest files from the scanned tree.
+ *
+ * The previous version checked a hardcoded candidate list at the repository
+ * root, so `pnpm-workspace.yaml`, `.gitignore`, `Cargo.toml`, and anything
+ * nested below the root were never reported.
+ */
+export async function readConfigs(repoRoot: string, files: string[] = []): Promise<string[]> {
+  if (files.length === 0) {
+    return [];
   }
 
-  const discovered = await fg(["*config.{js,cjs,mjs,ts,json}"], {
-    cwd: repoRoot,
-    onlyFiles: true,
-  });
-
-  return uniqueSorted([...fixedHits, ...discovered]);
+  return uniqueSorted(files.filter((file) => isConfigPath(file) || isManifestPath(file)));
 }

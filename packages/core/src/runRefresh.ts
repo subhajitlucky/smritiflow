@@ -1,311 +1,336 @@
 import path from "node:path";
 import fs from "fs-extra";
+import type {
+  CacheData,
+  ProjectMap,
+  RefreshCommandResult,
+  RefreshMode,
+  ScanReport,
+} from "../../shared/src/types.ts";
+import type { Reporter } from "./reporter.ts";
+import { consoleReporter } from "./reporter.ts";
 import { findRepoRoot } from "../../git/src/findRepoRoot.ts";
-import { getChangedFiles, shouldTrackChangedFile } from "../../git/src/getChangedFiles.ts";
-import { getChangedFilesSince } from "../../git/src/getChangedFilesSince.ts";
+import { shouldTrackChangedFile } from "../../git/src/getChangedFiles.ts";
 import { getCurrentBranch } from "../../git/src/getCurrentBranch.ts";
 import { getLastCommit } from "../../git/src/getLastCommit.ts";
 import { getRecentCommits } from "../../git/src/getRecentCommits.ts";
-import { runScan } from "./runScan.ts";
-import { readPackageJson } from "../../repo-parser/src/readPackageJson.ts";
-import { detectStack } from "../../repo-parser/src/detectStack.ts";
 import { scanTree } from "../../repo-parser/src/scanTree.ts";
 import { readConfigs } from "../../repo-parser/src/readConfigs.ts";
 import { detectFolders } from "../../repo-parser/src/detectFolders.ts";
 import { readReadme } from "../../repo-parser/src/readReadme.ts";
 import { extractRoutes } from "../../repo-parser/src/extractRoutes.ts";
+import { extractTodos } from "../../repo-parser/src/extractTodos.ts";
 import { buildImportGraph } from "../../repo-parser/src/buildImportGraph.ts";
 import { generateOverview } from "../../generators/src/generateOverview.ts";
 import { generateCurrentState } from "../../generators/src/generateCurrentState.ts";
-import { generateRunbook } from "../../generators/src/generateRunbook.ts";
-import { generateAgents } from "../../generators/src/generateAgents.ts";
-import { writeAgentsFile } from "../../generators/src/writeAgents.ts";
-import { GENERATED_FILES } from "../../shared/src/constants.ts";
-import type { CacheData, ProjectMap, ScanReport } from "../../shared/src/types.ts";
+import { DOCS_AI_DIR, GENERATED_FILES, SMRITI_DIR } from "../../shared/src/constants.ts";
 import { nowIso, uniqueSorted } from "../../shared/src/utils.ts";
-import { computeHashes, inferActiveAreas, summarizeReadme } from "./scanMetadata.ts";
+import { classifyChanges, diffHashes, type HashDiff } from "./changeDetection.ts";
+import { computeFileHashes, inferActiveAreas, summarizeReadme } from "./scanMetadata.ts";
+import { readCache, runScan } from "./runScan.ts";
 
-interface ChangeCategories {
-  packageChanged: boolean;
-  readmeChanged: boolean;
-  configChanged: boolean;
-  sourceChanged: boolean;
-  foldersChanged: boolean;
-  highVolume: boolean;
+const FULL_SCAN_TOUCHED_THRESHOLD = 200;
+const FULL_SCAN_ADDED_THRESHOLD = 60;
+
+interface RefreshEnvironment {
+  repoRoot: string;
+  branch: string;
+  lastCommit: string;
+  recentCommits: string[];
 }
 
-function diffHashKeys(
-  previous: Record<string, string>,
-  current: Record<string, string>
-): string[] {
-  const keys = new Set([...Object.keys(previous), ...Object.keys(current)]);
-  const changed: string[] = [];
-
-  for (const key of keys) {
-    if (previous[key] !== current[key]) {
-      changed.push(key);
-    }
-  }
-
-  return changed;
-}
-
-function normalizeChangedPaths(paths: string[]): string[] {
+function normalizePaths(paths: string[]): string[] {
   return uniqueSorted(
     paths
       .map((filePath) => filePath.replaceAll("\\", "/"))
-      .filter((filePath) => filePath.length > 0)
-      .filter((filePath) => !filePath.startsWith(".smritiflow/"))
+      .filter((filePath) => filePath.length > 0 && shouldTrackChangedFile(filePath))
   );
 }
 
-function isConfigPath(filePath: string): boolean {
-  return (
-    filePath.endsWith("tsconfig.json") ||
-    filePath.endsWith("tsconfig.base.json") ||
-    filePath.endsWith("pnpm-workspace.yaml") ||
-    filePath.endsWith("next.config.js") ||
-    filePath.endsWith("next.config.ts") ||
-    filePath.endsWith("vite.config.js") ||
-    filePath.endsWith("vite.config.ts") ||
-    filePath.endsWith("eslint.config.js") ||
-    filePath.endsWith("eslint.config.ts") ||
-    filePath.endsWith("jsconfig.json") ||
-    filePath.endsWith(".env.example")
-  );
+function writeCache(cache: CacheData, repoRoot: string): Promise<void> {
+  return fs.writeJson(path.join(repoRoot, SMRITI_DIR, "cache.json"), cache, { spaces: 2 });
 }
 
-function isSourcePath(filePath: string): boolean {
-  return /\.(ts|tsx|js|jsx|mjs|cjs|mdx)$/.test(filePath);
+function requiresFullScan(
+  diff: HashDiff,
+  touched: string[],
+  hasBaseline: boolean,
+  strategyChanged: boolean
+): string | null {
+  if (!hasBaseline) {
+    return "no fingerprint baseline to compare against";
+  }
+  if (strategyChanged) {
+    return "fingerprint strategy changed since the last scan";
+  }
+  if (classifyChanges(diff).manifestChanged) {
+    return "project manifest changed";
+  }
+  if (touched.length > FULL_SCAN_TOUCHED_THRESHOLD) {
+    return `high change volume (${touched.length} files)`;
+  }
+  if (diff.added.length > FULL_SCAN_ADDED_THRESHOLD) {
+    return `many new files (${diff.added.length})`;
+  }
+  if (diff.removed.length > FULL_SCAN_ADDED_THRESHOLD) {
+    return `many removed files (${diff.removed.length})`;
+  }
+  return null;
 }
 
-function classifyChanges(changedFiles: string[]): ChangeCategories {
-  return {
-    packageChanged: changedFiles.some(
-      (filePath) =>
-        filePath === "package.json" ||
-        filePath === "pnpm-lock.yaml" ||
-        filePath === "pnpm-workspace.yaml"
-    ),
-    readmeChanged: changedFiles.some((filePath) => filePath === "README.md"),
-    configChanged: changedFiles.some(isConfigPath),
-    sourceChanged: changedFiles.some(isSourcePath),
-    foldersChanged: changedFiles.some((filePath) =>
-      ["apps/", "packages/", "src/", "tests/", "scripts/", "docs/", "prisma/"]
-        .some((prefix) => filePath.startsWith(prefix))
-    ),
-    highVolume: changedFiles.length > 200,
-  };
+interface PartialInput {
+  repoRoot: string;
+  files: string[];
+  previousCache: CacheData;
+  previousMap: ProjectMap;
+  previousReport: ScanReport;
+  hashes: Record<string, string>;
+  strategy: CacheData["hashStrategy"];
+  diff: HashDiff;
+  env: RefreshEnvironment;
+  categories: ReturnType<typeof classifyChanges>;
 }
 
-async function runFullRefresh(
-  repoRoot: string,
-  reason: string,
-  currentHashes: Record<string, string>,
-  allChanged: string[]
-): Promise<void> {
-  await runScan(repoRoot);
+/**
+ * Re-runs only the analyzers whose inputs changed, reusing the tree listing and
+ * fingerprints the caller already computed. The previous implementation always
+ * walked the full tree and regenerated every document, so a "partial" refresh
+ * cost about as much as a scan.
+ */
+async function runPartialRefresh(input: PartialInput): Promise<string[]> {
+  const { repoRoot, files, previousCache, previousMap, previousReport, diff, env, categories } =
+    input;
 
-  const cachePath = path.join(repoRoot, ".smritiflow", "cache.json");
-  const scanReportPath = path.join(repoRoot, ".smritiflow", "scan-report.json");
-
-  const [refreshedCache, scanReport, lastCommit] = await Promise.all([
-    fs.readJson(cachePath) as Promise<CacheData>,
-    fs.readJson(scanReportPath) as Promise<ScanReport>,
-    getLastCommit(repoRoot),
-  ]);
-
-  const changedAreas = inferActiveAreas(allChanged);
-  scanReport.staleWarnings = [
-    `Refreshed using full scan (${reason}). Areas: ${changedAreas.join(", ") || "none"}`,
-  ];
-
-  const nextCache: CacheData = {
-    ...refreshedCache,
-    lastRefreshAt: nowIso(),
-    lastCommit,
-    hashes: currentHashes,
-    generatedFiles: GENERATED_FILES,
+  const refreshedSections: string[] = [];
+  const nextMap: ProjectMap = { ...previousMap };
+  const nextReport: ScanReport = {
+    ...previousReport,
+    fileCount: files.length,
   };
 
-  await fs.ensureDir(path.join(repoRoot, "docs", "ai"));
-  await fs.writeFile(
-    path.join(repoRoot, "docs", "ai", "CURRENT_STATE.md"),
-    generateCurrentState(scanReport)
-  );
-  await fs.writeJson(scanReportPath, scanReport, { spaces: 2 });
-  await fs.writeJson(cachePath, nextCache, { spaces: 2 });
-}
-
-export async function runRefresh(cwd: string): Promise<void> {
-  const repoRoot = await findRepoRoot(cwd);
-  const cachePath = path.join(repoRoot, ".smritiflow", "cache.json");
-
-  if (!(await fs.pathExists(cachePath))) {
-    console.log("No cache found. Running full scan instead.");
-    await runScan(repoRoot);
-    return;
+  if (categories.configChanged) {
+    nextMap.configs = await readConfigs(repoRoot, files);
+    refreshedSections.push("configs");
   }
 
-  const prevCache = (await fs.readJson(cachePath)) as CacheData;
-  const [gitChangedRaw, currentHashes, branch, lastCommit, recentCommits] = await Promise.all([
-    getChangedFiles(repoRoot),
-    computeHashes(repoRoot),
+  if (categories.structureChanged) {
+    nextMap.folders = await detectFolders(repoRoot, files);
+    refreshedSections.push("folders");
+  }
+
+  if (categories.sourceChanged) {
+    const [routes, moduleGraph, todos] = await Promise.all([
+      extractRoutes(repoRoot),
+      buildImportGraph(repoRoot, files),
+      extractTodos(repoRoot, files),
+    ]);
+    nextMap.routes = routes;
+    nextMap.moduleGraph = moduleGraph;
+    nextReport.todos = todos;
+    refreshedSections.push("routes", "moduleGraph", "todos");
+  }
+
+  const overviewChanged =
+    categories.readmeChanged || categories.sourceChanged || categories.configChanged || categories.structureChanged;
+
+  if (categories.docsChanged) {
+    nextReport.todos = await extractTodos(repoRoot, files);
+    if (!refreshedSections.includes("todos")) {
+      refreshedSections.push("todos");
+    }
+  }
+
+  if (overviewChanged) {
+    const readme = await readReadme(repoRoot, files);
+    await fs.writeFile(
+      path.join(repoRoot, DOCS_AI_DIR, "PROJECT_OVERVIEW.md"),
+      `${generateOverview(nextMap, nextReport, summarizeReadme(readme)).trimEnd()}\n`
+    );
+    refreshedSections.push("overview");
+  }
+
+  const touched = normalizePaths([...diff.changed, ...diff.added, ...diff.removed]);
+
+  Object.assign(nextReport, {
+    generatedAt: nowIso(),
+    branch: env.branch,
+    lastCommit: env.lastCommit,
+    recentCommits: env.recentCommits,
+    changedFiles: normalizePaths([...diff.changed, ...diff.added]),
+    addedFiles: diff.added,
+    removedFiles: diff.removed,
+    activeAreas: inferActiveAreas(touched),
+    notes: [`Partial refresh re-ran: ${refreshedSections.join(", ") || "nothing"}.`],
+    staleWarnings: [],
+  } satisfies Partial<ScanReport>);
+
+  await fs.writeFile(
+    path.join(repoRoot, DOCS_AI_DIR, "CURRENT_STATE.md"),
+    `${generateCurrentState(nextReport).trimEnd()}\n`
+  );
+
+  await fs.writeJson(
+    path.join(repoRoot, SMRITI_DIR, "project-map.json"),
+    nextMap,
+    { spaces: 2 }
+  );
+  await fs.writeJson(
+    path.join(repoRoot, SMRITI_DIR, "scan-report.json"),
+    nextReport,
+    { spaces: 2 }
+  );
+  await writeCache(
+    {
+      ...previousCache,
+      lastRefreshAt: nowIso(),
+      lastCommit: env.lastCommit,
+      hashes: input.hashes,
+      hashStrategy: input.strategy,
+      generatedFiles: GENERATED_FILES,
+    },
+    repoRoot
+  );
+
+  return refreshedSections;
+}
+
+export async function runRefresh(
+  cwd: string,
+  reporter: Reporter = consoleReporter
+): Promise<RefreshCommandResult> {
+  const repoRoot = await findRepoRoot(cwd);
+  const previousCache = await readCache(repoRoot);
+
+  if (!previousCache) {
+    reporter.log("No fingerprint baseline. Running full scan instead.");
+    await runScan(repoRoot, reporter);
+    return emptyResult(
+      repoRoot,
+      "full",
+      "no fingerprint baseline",
+      await getLastCommit(repoRoot),
+      []
+    );
+  }
+
+  const files = await scanTree(repoRoot);
+  const { hashes, strategy } = await computeFileHashes(repoRoot, files);
+
+  const [branch, lastCommit, recentCommits] = await Promise.all([
     getCurrentBranch(repoRoot),
     getLastCommit(repoRoot),
     getRecentCommits(repoRoot, 8),
   ]);
+  const env: RefreshEnvironment = { repoRoot, branch, lastCommit, recentCommits };
 
-  const hashChanged = diffHashKeys(prevCache.hashes ?? {}, currentHashes);
-  const previousCommit = prevCache.lastCommit ?? null;
-  let committedChanges: string[] = [];
+  // Content fingerprints are authoritative. Git only supplies commit metadata,
+  // because an uncommitted file whose content is already fingerprinted needs no
+  // regeneration and reporting it as changed would be noise.
+  const diff = diffHashes(previousCache.hashes ?? {}, hashes);
+  const touched = normalizePaths([...diff.changed, ...diff.added, ...diff.removed]);
 
-  if (previousCommit !== null && previousCommit !== "unknown" && previousCommit !== lastCommit) {
-    try {
-      committedChanges = (await getChangedFilesSince(repoRoot, previousCommit)).filter(
-        shouldTrackChangedFile
-      );
-    } catch {
-      await runFullRefresh(repoRoot, "recorded commit is no longer available", currentHashes, hashChanged);
-      console.log("Refresh complete. Changed files: ${hashChanged.length}");
-      return;
-    }
+  if (touched.length === 0) {
+    await writeCache(
+      {
+        ...previousCache,
+        lastRefreshAt: nowIso(),
+        lastCommit,
+        hashes,
+        hashStrategy: strategy,
+        generatedFiles: GENERATED_FILES,
+      },
+      repoRoot
+    );
+    reporter.log("No changes detected. Project memory is already fresh.");
+    return emptyResult(repoRoot, "none", null, lastCommit, []);
   }
 
-  if (previousCommit === null && lastCommit !== "unknown") {
-    await runFullRefresh(repoRoot, "cache has no recorded commit", currentHashes, hashChanged);
-    console.log("Refresh complete. Changed files: ${hashChanged.length}");
-    return;
-  }
-
-  const allChanged = normalizeChangedPaths([...committedChanges, ...hashChanged, ...gitChangedRaw]);
-  const gitChanged = normalizeChangedPaths([...committedChanges, ...gitChangedRaw]);
-
-  if (allChanged.length === 0) {
-    const nextCache: CacheData = {
-      ...prevCache,
-      lastRefreshAt: nowIso(),
-      lastCommit,
-      hashes: currentHashes,
-      generatedFiles: GENERATED_FILES,
-    };
-
-    await fs.writeJson(cachePath, nextCache, { spaces: 2 });
-    console.log("No changes detected. Project memory is already fresh.");
-    return;
-  }
-
-  const projectMapPath = path.join(repoRoot, ".smritiflow", "project-map.json");
-  const scanReportPath = path.join(repoRoot, ".smritiflow", "scan-report.json");
-  const docsDir = path.join(repoRoot, "docs", "ai");
-  await fs.ensureDir(docsDir);
+  const projectMapPath = path.join(repoRoot, SMRITI_DIR, "project-map.json");
+  const scanReportPath = path.join(repoRoot, SMRITI_DIR, "scan-report.json");
 
   if (!(await fs.pathExists(projectMapPath)) || !(await fs.pathExists(scanReportPath))) {
-    await runFullRefresh(repoRoot, "missing artifact files", currentHashes, allChanged);
-    console.log(`Refresh complete. Changed files: ${allChanged.length}`);
-    return;
+    await runScan(repoRoot, reporter);
+    reporter.log(`Refresh complete. Changed files: ${touched.length}`);
+    return result(repoRoot, "full", "missing artifact files", lastCommit, diff, touched, ["full scan"]);
   }
 
-  const categories = classifyChanges(allChanged);
-  if (categories.highVolume) {
-    await runFullRefresh(repoRoot, "high change volume", currentHashes, allChanged);
-    console.log(`Refresh complete. Changed files: ${allChanged.length}`);
-    return;
+  const hasBaseline = Object.keys(previousCache.hashes ?? {}).length > 0;
+  const strategyChanged = previousCache.hashStrategy !== undefined && previousCache.hashStrategy !== strategy;
+  const fullScanReason = requiresFullScan(diff, touched, hasBaseline, strategyChanged);
+
+  if (fullScanReason) {
+    await runScan(repoRoot, reporter);
+    reporter.log(`Refresh complete. Changed files: ${touched.length}`);
+    return result(repoRoot, "full", fullScanReason, lastCommit, diff, touched, ["full scan"]);
   }
 
-  const [prevProjectMap, prevScanReport] = await Promise.all([
+  const [previousMap, previousReport] = await Promise.all([
     fs.readJson(projectMapPath) as Promise<ProjectMap>,
     fs.readJson(scanReportPath) as Promise<ScanReport>,
   ]);
 
-  const nextProjectMap: ProjectMap = {
-    ...prevProjectMap,
-  };
+  const refreshedSections = await runPartialRefresh({
+    repoRoot,
+    files,
+    previousCache,
+    previousMap,
+    previousReport,
+    hashes,
+    strategy,
+    diff,
+    env,
+    categories: classifyChanges(diff),
+  });
 
-  let fileCount = prevScanReport.fileCount;
-  const treeFiles = await scanTree(repoRoot);
-  fileCount = treeFiles.length;
+  reporter.log(`Refresh complete. Changed files: ${touched.length}`);
 
-  if (categories.packageChanged) {
-    const pkg = await readPackageJson(repoRoot);
-    const scripts = pkg.scripts ?? {};
-    const dependencyNames = uniqueSorted([
-      ...Object.keys(pkg.dependencies ?? {}),
-      ...Object.keys(pkg.devDependencies ?? {}),
-    ]);
+  return result(repoRoot, "partial", null, lastCommit, diff, touched, refreshedSections);
+}
 
-    nextProjectMap.name = pkg.name ?? path.basename(repoRoot);
-    nextProjectMap.scripts = scripts;
-    nextProjectMap.dependencies = dependencyNames;
-    nextProjectMap.detectedStack = detectStack(pkg);
-  }
-
-  if (categories.configChanged) {
-    nextProjectMap.configs = await readConfigs(repoRoot);
-  }
-
-  if (categories.foldersChanged || categories.sourceChanged) {
-    nextProjectMap.folders = await detectFolders(repoRoot);
-  }
-
-  if (categories.sourceChanged) {
-    const [routes, moduleGraph] = await Promise.all([
-      extractRoutes(repoRoot),
-      buildImportGraph(repoRoot, treeFiles),
-    ]);
-
-    nextProjectMap.routes = routes;
-    nextProjectMap.moduleGraph = moduleGraph;
-  }
-
-  const nextScanReport: ScanReport = {
-    ...prevScanReport,
-    generatedAt: nowIso(),
-    branch,
+function emptyResult(
+  repoRoot: string,
+  mode: RefreshMode,
+  reason: string | null,
+  lastCommit: string,
+  touched: string[]
+): RefreshCommandResult {
+  return {
+    command: "refresh",
+    ok: true,
+    repoRoot,
+    mode,
+    reason,
+    changedFiles: touched,
+    changedCount: touched.length,
+    addedFiles: [],
+    removedFiles: [],
+    activeAreas: [],
+    refreshedSections: mode === "full" ? ["full scan"] : [],
     lastCommit,
-    recentCommits,
-    changedFiles: gitChanged,
-    activeAreas: inferActiveAreas(allChanged),
-    fileCount,
-    staleWarnings: [
-      `Partial refresh applied for areas: ${inferActiveAreas(allChanged).join(", ") || "none"}`,
-    ],
   };
+}
 
-  const regenerateOverview =
-    categories.packageChanged ||
-    categories.readmeChanged ||
-    categories.configChanged ||
-    categories.sourceChanged ||
-    categories.foldersChanged;
-
-  if (regenerateOverview) {
-    const readme = await readReadme(repoRoot);
-    const overview = generateOverview(nextProjectMap, nextScanReport, summarizeReadme(readme));
-    await fs.writeFile(path.join(docsDir, "PROJECT_OVERVIEW.md"), overview);
-  }
-
-  if (categories.packageChanged) {
-    const runbook = generateRunbook(nextProjectMap.scripts);
-    const agents = generateAgents(nextProjectMap);
-    await fs.writeFile(path.join(docsDir, "RUNBOOK.md"), runbook);
-    await writeAgentsFile(repoRoot, agents);
-  }
-
-  const currentState = generateCurrentState(nextScanReport);
-  await fs.writeFile(path.join(docsDir, "CURRENT_STATE.md"), currentState);
-
-  const nextCache: CacheData = {
-    ...prevCache,
-    lastRefreshAt: nowIso(),
+function result(
+  repoRoot: string,
+  mode: RefreshMode,
+  reason: string | null,
+  lastCommit: string,
+  diff: HashDiff,
+  touched: string[],
+  refreshedSections: string[]
+): RefreshCommandResult {
+  return {
+    command: "refresh",
+    ok: true,
+    repoRoot,
+    mode,
+    reason,
+    changedFiles: touched,
+    changedCount: touched.length,
+    addedFiles: diff.added,
+    removedFiles: diff.removed,
+    activeAreas: inferActiveAreas(touched),
+    refreshedSections,
     lastCommit,
-    hashes: currentHashes,
-    generatedFiles: GENERATED_FILES,
   };
-
-  await fs.writeJson(projectMapPath, nextProjectMap, { spaces: 2 });
-  await fs.writeJson(scanReportPath, nextScanReport, { spaces: 2 });
-  await fs.writeJson(cachePath, nextCache, { spaces: 2 });
-
-  console.log(`Refresh complete. Changed files: ${allChanged.length}`);
 }

@@ -16,15 +16,19 @@ export const DEFAULT_CACHE = {
   lastRefreshAt: null,
 };
 
-export const CONFIG_CANDIDATES = [
-  "tsconfig.json",
-  "tsconfig.base.json",
-  "jsconfig.json",
-  "next.config.js",
-  "next.config.ts",
-  "vite.config.js",
-  "vite.config.ts",
-  "eslint.config.js",
-  "eslint.config.ts",
-  ".env.example",
-];
+/**
+ * Paths SmritiFlow writes itself. These are excluded from change detection so
+ * a scan can never report its own output as a repository change, which would
+ * otherwise mark memory stale immediately after every run.
+ */
+export const GENERATED_PATH_PREFIXES = [".smritiflow/", "docs/ai/"];
+
+export function isGeneratedPath(filePath: string): boolean {
+  const normalized = filePath.replaceAll("\\", "/");
+
+  if (GENERATED_PATH_PREFIXES.some((prefix) => normalized.startsWith(prefix))) {
+    return true;
+  }
+
+  return GENERATED_FILES.includes(normalized);
+}
