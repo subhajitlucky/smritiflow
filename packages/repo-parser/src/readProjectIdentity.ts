@@ -69,6 +69,31 @@ function parseGoMod(content: string): Partial<ProjectIdentity> {
   return { name };
 }
 
+function parseRequirementsTxt(content: string): Partial<ProjectIdentity> {
+  const dependencies: string[] = [];
+  const devDependencies: string[] = [];
+
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (trimmed.length === 0 || trimmed.startsWith("#") || trimmed.startsWith("-")) {
+      continue;
+    }
+
+    const name = trimmed.split(/[<>=!~;[\s]/)[0]?.trim();
+    if (!name || !/^[A-Za-z0-9._-]+$/.test(name)) {
+      continue;
+    }
+
+    if (/^\[tool\.poetry\.dev-dependencies\]|^\[project\.optional-dependencies\]/.test(line)) {
+      devDependencies.push(name);
+    } else {
+      dependencies.push(name);
+    }
+  }
+
+  return { dependencies, devDependencies };
+}
+
 function parseComposerJson(content: string): Partial<ProjectIdentity> {
   try {
     const parsed = JSON.parse(content) as {
@@ -152,6 +177,14 @@ export async function readProjectIdentity(
   const composer = await read("composer.json");
   if (composer) {
     return { ...EMPTY, ...parseComposerJson(composer) };
+  }
+
+  // requirements.txt declares no project name, so only dependencies come from it.
+  for (const candidate of ["requirements.txt", "requirements-dev.txt"]) {
+    const content = await read(candidate);
+    if (content) {
+      return { ...EMPTY, ...parseRequirementsTxt(content) };
+    }
   }
 
   return EMPTY;

@@ -4,6 +4,8 @@ import { describe, expect, it } from "vitest";
 import { detectPackageManager } from "../packages/repo-parser/src/detectPackageManager.ts";
 import { detectLanguages } from "../packages/repo-parser/src/detectLanguages.ts";
 import { detectEntryPoints } from "../packages/repo-parser/src/detectEntryPoints.ts";
+import { readWorkspacePackages } from "../packages/repo-parser/src/readWorkspacePackages.ts";
+import { summarizeReadme } from "../packages/core/src/scanMetadata.ts";
 import { createTempDir } from "./helpers/tempRepo.ts";
 
 async function withTempDir(fn: (dir: string) => Promise<void>): Promise<void> {
@@ -98,5 +100,63 @@ describe("detectEntryPoints", () => {
     expect(entries).toContain("src/app.tsx");
     expect(entries).toContain("cmd/server/main.go");
     expect(entries).not.toContain("src/lib/thing.ts");
+  });
+});
+
+describe("readWorkspacePackages", () => {
+  it("excludes test fixtures from workspace packages", async () => {
+    const dir = await createTempDir("smritiflow-ws-fixtures-");
+
+    try {
+      await fs.outputFile(
+        path.join(dir, "package.json"),
+        JSON.stringify({ name: "root", workspaces: ["packages/*", "apps/*"] })
+      );
+      await fs.outputFile(
+        path.join(dir, "packages", "core", "package.json"),
+        JSON.stringify({ name: "@acme/core", dependencies: { zod: "3" } })
+      );
+      await fs.outputFile(
+        path.join(dir, "test", "fixtures", "node-fail", "package.json"),
+        JSON.stringify({ name: "node-fail-fixture" })
+      );
+      await fs.outputFile(
+        path.join(dir, "test", "fixtures", "node-pass", "package.json"),
+        JSON.stringify({ name: "node-pass-fixture" })
+      );
+
+      const packages = await readWorkspacePackages(dir, [
+        "package.json",
+        "packages/core/package.json",
+        "test/fixtures/node-fail/package.json",
+        "test/fixtures/node-pass/package.json",
+      ], { name: "root", workspaces: ["packages/*", "apps/*"] });
+
+      expect(packages.map((entry) => entry.name)).toEqual(["@acme/core"]);
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+});
+
+describe("summarizeReadme", () => {
+  it("skips a leading blockquote in favour of prose", () => {
+    const summary = summarizeReadme(
+      ["# Kalia", "", "> invocation text", "> more invocation", "", "A toolkit for evaluating language models."].join("\n")
+    );
+
+    expect(summary).toBe("A toolkit for evaluating language models.");
+  });
+
+  it("skips badge markup", () => {
+    const summary = summarizeReadme(
+      ["# P", "", "[![npm](https://img.shields.io/npm/v/p.svg)](https://npmjs.com/package/p)", "", "A real description."].join("\n")
+    );
+
+    expect(summary).toBe("A real description.");
+  });
+
+  it("returns an empty string when there is no prose", () => {
+    expect(summarizeReadme("# Title\n\n")).toBe("");
   });
 });

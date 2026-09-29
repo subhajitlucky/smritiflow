@@ -7,7 +7,7 @@
     "ecosystem": "node",
     "manager": "pnpm",
     "install": "pnpm install",
-    "run": "pnpm <script>",
+    "run": null,
     "test": "pnpm test",
     "build": "pnpm build"
   },
@@ -110,7 +110,7 @@
   "entryPoints": [],
   "moduleGraph": {
     "nodes": 66,
-    "edges": 169,
+    "edges": 171,
     "hotspots": [
       "packages/shared/src/types.ts (20)",
       "packages/repo-parser/src/languages.ts (16)",
@@ -119,7 +119,7 @@
       "packages/core/src/runScan.ts (8)",
       "packages/git/src/findRepoRoot.ts (7)",
       "packages/shared/src/constants.ts (7)",
-      "packages/git/src/getChangedFiles.ts (6)"
+      "packages/core/src/scanMetadata.ts (6)"
     ],
     "externalDependencies": [
       "node:path (40)",

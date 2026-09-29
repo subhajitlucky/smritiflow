@@ -5,6 +5,8 @@ import { uniqueSorted } from "../../shared/src/utils.ts";
 import { applyIgnoreRules, FAST_GLOB_PRUNE_PATTERNS, loadIgnoreRules } from "./ignoreRules.ts";
 import { isSourcePath, isTestPath } from "./languages.ts";
 
+const COMPONENT_DIRECTORY_RE = /(^|\/)(components|component|widgets|examples|demos?)\//;
+
 const MAX_SOURCE_FILES = 2000;
 
 interface RoutePattern {
@@ -85,24 +87,36 @@ function filePathToRoute(filePath: string): string {
   return normalized;
 }
 
-async function collectConventionRoutes(repoRoot: string, rules: Awaited<ReturnType<typeof loadIgnoreRules>>): Promise<string[]> {
-  const appRoutes = await fg(["**/app/**/{page,route}.{ts,tsx,js,jsx,mdx}"], {
-    cwd: repoRoot,
-    onlyFiles: true,
-    ignore: FAST_GLOB_PRUNE_PATTERNS,
-  });
+/**
+ * Next.js only treats `app/`, `pages/`, `src/app/`, and `src/pages/` as routing
+ * roots, plus one level of workspace applications. Globbing `**\/pages/**`
+ * instead swept up embedded component demos, which reported hundreds of
+ * fictional routes in a repository whose real route table was far smaller.
+ *
+ * The two conventions are matched differently on purpose: the app router only
+ * creates a route for `page.*` and `route.*` files, so `layout.*` and colocated
+ * components are not routes, whereas the pages router treats every file in
+ * `pages/` as one.
+ */
+const APP_ROOTS = ["app", "src/app", "apps/*/app", "packages/*/app"];
+const PAGES_ROOTS = ["pages", "src/pages", "apps/*/pages", "packages/*/pages"];
 
-  const pageRoutes = await fg(["**/pages/**/*.{ts,tsx,js,jsx,mdx}"], {
-    cwd: repoRoot,
-    onlyFiles: true,
-    ignore: [
-      ...FAST_GLOB_PRUNE_PATTERNS,
-      "**/pages/api/**",
-      "**/pages/_app.*",
-      "**/pages/_document.*",
-      "**/pages/_error.*",
-    ],
-  });
+const NON_ROUTE_FILES = ["**/pages/api/**", "**/pages/_app.*", "**/pages/_document.*", "**/pages/_error.*"];
+
+async function collectConventionRoutes(repoRoot: string, rules: Awaited<ReturnType<typeof loadIgnoreRules>>): Promise<string[]> {
+  const appRoutes = await fg(
+    APP_ROOTS.map((root) => `${root}/**/{page,route}.{ts,tsx,js,jsx,mdx}`),
+    { cwd: repoRoot, onlyFiles: true, ignore: FAST_GLOB_PRUNE_PATTERNS }
+  );
+
+  const pageRoutes = await fg(
+    PAGES_ROOTS.map((root) => `${root}/**/*.{ts,tsx,js,jsx,mdx}`),
+    {
+      cwd: repoRoot,
+      onlyFiles: true,
+      ignore: [...FAST_GLOB_PRUNE_PATTERNS, ...NON_ROUTE_FILES],
+    }
+  );
 
   return applyIgnoreRules(rules, [...appRoutes, ...pageRoutes]).map(filePathToRoute);
 }
@@ -117,8 +131,11 @@ async function readSourceFiles(repoRoot: string, rules: Awaited<ReturnType<typeo
 
   const contents = new Map<string, string>();
 
+  // Route registration does not live in component, example, or demo trees.
+  // Scanning them reported demo scenarios as real endpoints.
   const sourceFiles = candidates.filter(
-    (file) => isSourcePath(file) && !isTestPath(file)
+    (file) =>
+      isSourcePath(file) && !isTestPath(file) && !COMPONENT_DIRECTORY_RE.test(file)
   );
 
   for (const file of applyIgnoreRules(rules, sourceFiles).slice(0, MAX_SOURCE_FILES)) {

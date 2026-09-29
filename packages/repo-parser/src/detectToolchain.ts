@@ -24,16 +24,66 @@ interface ToolchainSpec {
 }
 
 const SPECS: ToolchainSpec[] = [
-  { ecosystem: "python", manager: "uv", install: "uv sync", test: "pytest", build: null, run: "uvicorn app.main:app --reload", markers: ["uv.lock"] },
-  { ecosystem: "python", manager: "poetry", install: "poetry install", test: "poetry run pytest", build: null, run: "poetry run uvicorn app.main:app --reload", markers: ["poetry.lock"] },
-  { ecosystem: "python", manager: "pip", install: "pip install -r requirements.txt", test: "pytest", build: null, run: "uvicorn app.main:app --reload", markers: ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "setup.py"] },
+  { ecosystem: "python", manager: "uv", install: "uv sync", test: "pytest", build: null, run: null, markers: ["uv.lock"] },
+  { ecosystem: "python", manager: "poetry", install: "poetry install", test: "poetry run pytest", build: null, run: null, markers: ["poetry.lock"] },
+  { ecosystem: "python", manager: "pip", install: "pip install -r requirements.txt", test: "pytest", build: null, run: null, markers: ["requirements.txt", "requirements-dev.txt", "pyproject.toml", "setup.py"] },
   { ecosystem: "go", manager: "go", install: "go mod download", test: "go test ./...", build: "go build ./...", run: "go run .", markers: ["go.mod"] },
   { ecosystem: "rust", manager: "cargo", install: "cargo fetch", test: "cargo test", build: "cargo build --release", run: "cargo run", markers: ["Cargo.toml"] },
-  { ecosystem: "ruby", manager: "bundler", install: "bundle install", test: "bundle exec rspec", build: null, run: "bundle exec rails server", markers: ["Gemfile"] },
-  { ecosystem: "php", manager: "composer", install: "composer install", test: "composer test", build: null, run: "php artisan serve", markers: ["composer.json"] },
-  { ecosystem: "java", manager: "maven", install: "mvn install", test: "mvn test", build: "mvn package", run: "mvn spring-boot:run", markers: ["pom.xml"] },
-  { ecosystem: "java", manager: "gradle", install: "gradle build", test: "gradle test", build: "gradle build", run: "gradle bootRun", markers: ["build.gradle", "build.gradle.kts"] },
+  { ecosystem: "ruby", manager: "bundler", install: "bundle install", test: "bundle exec rspec", build: null, run: null, markers: ["Gemfile"] },
+  { ecosystem: "php", manager: "composer", install: "composer install", test: null, build: null, run: null, markers: ["composer.json"] },
+  { ecosystem: "java", manager: "maven", install: "mvn install", test: "mvn test", build: "mvn package", run: null, markers: ["pom.xml"] },
+  { ecosystem: "java", manager: "gradle", install: "gradle build", test: "gradle test", build: "gradle build", run: null, markers: ["build.gradle", "build.gradle.kts"] },
 ];
+
+const SERVICE_ENTRY_RE = /^(?:[\w-]+\/)*app\/main\.(?:py|js|ts)$|^main\.(?:py|js|ts)$|^src\/main\.(?:py|js|ts)$/;
+const SERVICE_FRAMEWORK_RE = /\b(?:FastAPI|Flask)\s*\(|@app\.(?:get|post|put|delete|route)\(|createServer\(|app\.listen\(/;
+
+/**
+ * A run command is only offered when the repository actually looks like a
+ * service. Guessing `uvicorn app.main:app` for a training or ETL repository is
+ * worse than offering nothing, so the guess is gated on evidence.
+ */
+async function detectRunCommand(
+  repoRoot: string,
+  files: string[],
+  spec: ToolchainSpec
+): Promise<string | null> {
+  if (spec.ecosystem === "node") {
+    return spec.run;
+  }
+
+  const hasServiceEntry = files.some((file) => SERVICE_ENTRY_RE.test(file));
+
+  if (!hasServiceEntry) {
+    return null;
+  }
+
+  if (spec.ecosystem === "python") {
+    const declaresFramework = await Promise.all(
+      files
+        .filter((file) => file.endsWith(".py") && files.indexOf(file) < 40)
+        .map(async (file) => {
+          try {
+            return SERVICE_FRAMEWORK_RE.test(await fs.readFile(path.join(repoRoot, file), "utf8"));
+          } catch {
+            return false;
+          }
+        })
+    );
+
+    if (!declaresFramework.some(Boolean)) {
+      return null;
+    }
+
+    return spec.manager === "poetry" ? "poetry run uvicorn app.main:app --reload" : "uvicorn app.main:app --reload";
+  }
+
+  if (spec.ecosystem === "ruby") {
+    return "bundle exec rails server";
+  }
+
+  return spec.run;
+}
 
 /**
  * Detects the project's real build toolchain. Without this, a Python or Go
@@ -53,7 +103,10 @@ export async function detectToolchain(
       ecosystem: "node",
       manager: nodeManager.name,
       install: nodeManager.install,
-      run: Object.keys(pkg.scripts ?? {}).length > 0 ? `${nodeManager.run} <script>` : null,
+      // The real command is derived from the project's own scripts at
+      // generation time, so the toolchain field stays null rather than
+      // publishing a `<script>` placeholder a consumer might print verbatim.
+      run: null,
       test: pkg.scripts?.test ? `${nodeManager.run} test` : null,
       build: pkg.scripts?.build ? `${nodeManager.run} build` : null,
     };
@@ -68,7 +121,7 @@ export async function detectToolchain(
           install: spec.install,
           test: spec.test,
           build: spec.build,
-          run: spec.run,
+          run: await detectRunCommand(repoRoot, files, spec),
         };
       }
     }

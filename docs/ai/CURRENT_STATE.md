@@ -1,10 +1,11 @@
 # Current State
 
-- Generated at: 2026-09-29T09:59:58.568Z
+- Generated at: 2026-09-29T10:14:03.356Z
 - Branch: main
-- Commit: 317e19938a9508bcb14bd5d34ada1bb1b6a4bc52
+- Commit: 43f3dd9bdcf23ce1126e75c2722f23c0c36aa9a1
 
 ## Recent Commits
+- 43f3dd9 feat: generate memory from verified repository facts (#3)
 - 317e199 docs: add handoff preview from live scan run
 - 37c761f docs(readme): add badges, artifact table, and requirements (#2)
 - 9f4d7e0 ci(publish): authenticate with NPM_TOKEN so releases publish without trusted-publisher setup
@@ -12,64 +13,23 @@
 - 8776122 fix: commit-aware refresh, correct ignore rules, and merge-safe AGENTS.md
 - ba29220 chore: stop tracking node_modules
 - 689b454 chore(release): 0.1.1 with npm metadata (description, keywords, repository, license)
-- 2919f30 chore: add MIT license
 
 ## Changed Files
-- .agents/skills/smritiflow/SKILL.md
-- .gitignore
-- apps/cli/package.json
-- apps/cli/src/index.ts
-- package.json
-- packages/core/src/changeDetection.ts
-- packages/core/src/reporter.ts
-- packages/core/src/runHook.ts
-- packages/core/src/runRefresh.ts
-- packages/core/src/runResume.ts
 - packages/core/src/runScan.ts
-- packages/core/src/runStatus.ts
 - packages/core/src/scanMetadata.ts
-- packages/generators/src/generateAgents.ts
-- packages/generators/src/generateCurrentState.ts
-- packages/generators/src/generateOverview.ts
-- packages/generators/src/generateRunbook.ts
-- packages/generators/src/writeAgents.ts
-- packages/generators/src/writeArtifacts.ts
-- packages/repo-parser/src/buildImportGraph.ts
-- packages/repo-parser/src/detectEntryPoints.ts
-- packages/repo-parser/src/detectFolders.ts
-- packages/repo-parser/src/detectLanguages.ts
-- packages/repo-parser/src/detectPackageManager.ts
-- packages/repo-parser/src/detectStack.ts
 - packages/repo-parser/src/detectToolchain.ts
 - packages/repo-parser/src/extractRoutes.ts
-- packages/repo-parser/src/extractTodos.ts
-- packages/repo-parser/src/languages.ts
-- packages/repo-parser/src/parseImports.ts
-- packages/repo-parser/src/readConfigs.ts
 - packages/repo-parser/src/readProjectIdentity.ts
-- packages/repo-parser/src/readReadme.ts
 - packages/repo-parser/src/readWorkspacePackages.ts
-- packages/shared/src/constants.ts
-- packages/shared/src/types.ts
-- README.md
-- tests/cli.json-output.test.ts
-- tests/core.changeDetection.test.ts
-- tests/core.refresh-status-resume.integration.test.ts
-- ... and 10 more (see .smritiflow/scan-report.json)
+- tests/core.scan.integration.test.ts
+- tests/repo-parser.detectProject.test.ts
+- tests/repo-parser.extractRoutes.test.ts
+- tests/repo-parser.projectIdentity.test.ts
 
 ## Likely Active Areas
-- .agents
-- .agents/skills
-- .gitignore
-- apps
-- apps/cli
-- package.json
 - packages
 - packages/core
-- packages/generators
 - packages/repo-parser
-- packages/shared
-- README.md
 - tests
 
 ## Open Markers

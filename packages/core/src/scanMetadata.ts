@@ -101,6 +101,7 @@ export function summarizeReadme(readmeText: string): string {
       (block) =>
         block.length > 0 &&
         !block.startsWith("#") &&
+        !block.startsWith(">") &&
         !MARKUP_ONLY_RE.test(block) &&
         /[a-z]{3}/i.test(block)
     );

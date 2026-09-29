@@ -62,6 +62,20 @@ describe("readProjectIdentity", () => {
     });
   });
 
+  it("reads dependencies from requirements.txt", async () => {
+    await withFiles(
+      {
+        "requirements.txt": ["# comment", "torch>=2.4", "numpy>=1.26", "-r other.txt", "huggingface_hub>=0.23"].join("\n"),
+      },
+      async (dir, files) => {
+        const identity = await readProjectIdentity(dir, files);
+
+        expect(identity.dependencies).toEqual(["torch", "numpy", "huggingface_hub"]);
+        expect(identity.name).toBeNull();
+      }
+    );
+  });
+
   it("prefers package.json when present", async () => {
     await withFiles(
       {
@@ -125,8 +139,49 @@ describe("detectToolchain", () => {
         expect(toolchain.manager).toBe("pnpm");
         expect(toolchain.install).toBe("pnpm install");
         expect(toolchain.test).toBe("pnpm test");
+        expect(toolchain.run).toBeNull();
       }
     );
+  });
+
+  it("does not invent a uvicorn run command for a non-service python repo", async () => {
+    await withFiles(
+      {
+        "requirements.txt": "torch>=2.4\n",
+        "train.py": "import torch\n",
+        "eval/eval_bench.py": "def run(): pass\n",
+      },
+      async (dir, files) => {
+        const toolchain = await detectToolchain(dir, files, {});
+
+        expect(toolchain.ecosystem).toBe("python");
+        expect(toolchain.install).toBe("pip install -r requirements.txt");
+        expect(toolchain.run).toBeNull();
+      }
+    );
+  });
+
+  it("offers a uvicorn run command when a FastAPI service entry exists", async () => {
+    await withFiles(
+      {
+        "requirements.txt": "fastapi\n",
+        "app/main.py": "from fastapi import FastAPI\napp = FastAPI()\n",
+      },
+      async (dir, files) => {
+        const toolchain = await detectToolchain(dir, files, {});
+        expect(toolchain.run).toBe("uvicorn app.main:app --reload");
+      }
+    );
+  });
+
+  it("offers no run command for a gradle library", async () => {
+    await withFiles({ "build.gradle": "plugins { id 'java-library' }\n" }, async (dir, files) => {
+      const toolchain = await detectToolchain(dir, files, {});
+
+      expect(toolchain.ecosystem).toBe("java");
+      expect(toolchain.run).toBeNull();
+      expect(toolchain.build).toBe("gradle build");
+    });
   });
 
   it("reports an unknown toolchain when nothing is declared", async () => {

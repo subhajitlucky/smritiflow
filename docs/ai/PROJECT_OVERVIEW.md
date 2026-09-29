@@ -31,7 +31,7 @@ SmritiFlow is a CLI for maintaining living repository memory for coding agents. 
 
 ## Dependency Graph
 - Internal source files: 66
-- Internal import edges: 169
+- Internal import edges: 171
 
 ### Most Depended-Upon Modules
 - packages/shared/src/types.ts (20)
@@ -41,7 +41,7 @@ SmritiFlow is a CLI for maintaining living repository memory for coding agents. 
 - packages/core/src/runScan.ts (8)
 - packages/git/src/findRepoRoot.ts (7)
 - packages/shared/src/constants.ts (7)
-- packages/git/src/getChangedFiles.ts (6)
+- packages/core/src/scanMetadata.ts (6)
 
 ### Most-Used External Modules
 - node:path (40)
@@ -73,7 +73,7 @@ SmritiFlow is a CLI for maintaining living repository memory for coding agents. 
 - vitest.config.ts
 
 ## Snapshot
-- Generated: 2026-09-29T09:59:58.568Z
+- Generated: 2026-09-29T10:14:03.356Z
 - Files scanned: 82
 - Branch: main
-- Commit: 317e19938a9508bcb14bd5d34ada1bb1b6a4bc52
+- Commit: 43f3dd9bdcf23ce1126e75c2722f23c0c36aa9a1
