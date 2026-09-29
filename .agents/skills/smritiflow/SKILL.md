@@ -1,6 +1,6 @@
 ---
 name: smritiflow
-description: Repository memory workflow skill for SmritiFlow init, scan, refresh, status, and resume commands.
+description: Repository memory workflow skill for SmritiFlow init, scan, refresh, status, resume, and hook commands.
 ---
 
 # SmritiFlow Skill
@@ -25,15 +25,16 @@ Do not use this skill when:
 Prefer these commands:
 
 ```bash
-smritiflow status
+smritiflow status --json
 smritiflow refresh
 smritiflow resume
+smritiflow hook session-start
 ```
 
 Both command names are supported:
 
-- `smritiflow init|scan|refresh|status|resume`
-- `sf init|scan|refresh|status|resume`
+- `smritiflow init|scan|refresh|status|resume|hook`
+- `sf init|scan|refresh|status|resume|hook`
 
 If SmritiFlow is not installed, the normal install path is:
 
@@ -50,11 +51,28 @@ npx smritiflow status
 
 ## Workflow
 
-1. Start with `smritiflow status`.
-2. If the repo is stale, run `smritiflow refresh`.
-3. Use `smritiflow resume` to identify active areas and next actions.
+1. Start with `smritiflow status --json` and read `stale` and `staleReasons`.
+2. If the repo is stale, run `smritiflow refresh` and re-read `docs/ai/CURRENT_STATE.md`.
+3. Use `smritiflow resume --json` to get active areas, changed files, and open markers.
 4. Use `smritiflow scan` when a full regeneration is needed.
 5. Use `smritiflow init` only when memory files do not exist yet.
+
+## Machine-Readable Output
+
+Every command accepts `--json` and returns a single JSON object on stdout with
+no human text mixed in. Prefer it over parsing prose.
+
+| Command | Fields worth reading |
+| --- | --- |
+| `status --json` | `initialized`, `stale`, `staleReasons`, `changedFiles`, `lastScanAt` |
+| `refresh --json` | `mode` (`full` \| `partial` \| `none`), `changedFiles`, `refreshedSections` |
+| `resume --json` | `readFirst`, `activeAreas`, `changedFiles`, `todos`, `nextSteps` |
+| `scan --json` | `fileCount`, `sourceFileCount`, `routeCount`, `todoCount` |
+| `hook --json` | `stale`, `readFirst`, `activeAreas`, `brief` |
+
+`docs/ai/CURRENT_STATE.md` lists open `TODO`, `FIXME`, `HACK`, `XXX`, `BUG`, and
+`OPTIMIZE` markers with file and line numbers. Read them before planning work:
+they are the closest thing the repository has to a task list.
 
 ## Read Order
 
@@ -78,8 +96,14 @@ When SmritiFlow artifacts exist, prefer this order:
 
 ## Rules
 
-- Prefer facts from `.smritiflow/*.json` over assumptions.
+- Prefer facts from `.smritiflow/*.json` and `--json` output over assumptions.
 - Treat `docs/ai/*.md` as summaries of the generated JSON artifacts.
 - If `status` is stale, refresh before making planning decisions.
 - Use `resume` to narrow focus before broad repo exploration.
+- Read the most depended-upon modules in `docs/ai/PROJECT_OVERVIEW.md` before
+  guessing where behaviour lives.
+- Check `docs/ai/PROJECT_OVERVIEW.md` for reported import cycles before
+  introducing a new cross-package dependency.
 - After meaningful code changes, run `refresh` so artifacts stay current.
+- Never edit files inside `<!-- smritiflow:begin -->` / `<!-- smritiflow:end -->`;
+  they are regenerated.

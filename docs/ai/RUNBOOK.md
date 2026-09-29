@@ -1,28 +1,27 @@
 # Runbook
 
-## Install
-- `pnpm install`
+## Setup
+- Toolchain: node (pnpm)
+- Install: `pnpm install`
 
-## Dev
-- pnpm --filter ./apps/cli dev
+## Commands
+- dev: `pnpm dev`
+- build: `pnpm build`
+- test: `pnpm test`
+- lint: `pnpm lint`
+- typecheck: `pnpm typecheck`
 
-## Test
-- vitest run
+## All Scripts
+- test:watch: `pnpm test:watch` — vitest
+- validate: `pnpm validate` — pnpm typecheck && pnpm test && pnpm build
 
-## Lint
-- pnpm typecheck
+## Workspace Packages
+- smritiflow: `pnpm --filter smritiflow dev` (or `cd apps/cli`)
 
-## Build
-- pnpm -r build
+## Environment
+- Copy `.env.example` to `.env` when that file exists.
+- SmritiFlow never reads or generates secret values.
 
-## Environment Setup
-- Check `.env.example` when present.
-
-## Common Scripts
-- build: pnpm -r build
-- dev: pnpm --filter ./apps/cli dev
-- lint: pnpm typecheck
-- typecheck: tsc -p tsconfig.json --noEmit
-- test: vitest run
-- test:watch: vitest
-- validate: pnpm typecheck && pnpm test && pnpm build
+## Freshness
+- Run `smritiflow status` to check whether this runbook matches the current tree.
+- Project: smritiflow — SmritiFlow is a CLI for maintaining living repository memory for coding agents.
