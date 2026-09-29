@@ -1,7 +1,7 @@
 {
   "name": "smritiflow",
   "version": "0.2.0",
-  "description": "Repository-memory CLI that scans a codebase and generates structured handoff artifacts for coding agents.",
+  "description": "Repository-memory CLI for coding agents: generates AGENTS.md and docs/ai artifacts, with --json output and a session-start hook.",
   "type": "module",
   "license": "MIT",
   "author": "Subhajit Pradhan",
@@ -16,12 +16,15 @@
   },
   "keywords": [
     "ai-agents",
+    "agent-handoff",
+    "repository-memory",
     "context-engineering",
+    "codebase",
+    "code-analysis",
     "developer-tools",
     "cli",
-    "repository-memory",
-    "codebase",
-    "agent-handoff"
+    "monorepo",
+    "json-output"
   ],
   "engines": {
     "node": ">=20"
