@@ -62,16 +62,55 @@ never match them: `docs/ai/CURRENT_STATE.md`, `.smritiflow/scan-report.json`, an
 ## Wiring It Into an Agent Harness
 
 `smritiflow hook` exists so memory arrives without the agent having to ask for
-it. Point a session-start hook at it:
+it. The brief states whether memory is fresh, which files to read first, the
+active areas, the uncommitted changes, and any open TODO/FIXME markers.
 
-```bash
-smritiflow hook session-start
+### Claude Code
+
+SessionStart hook stdout is added to the model's context automatically, so no
+further plumbing is needed. Add this to `.claude/settings.json` at the repository
+root and commit it so the whole team gets it:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx smritiflow hook session-start || true"
+          }
+        ]
+      }
+    ]
+  }
+}
 ```
 
-The brief states whether memory is fresh, which files to read first, the active
-areas, the uncommitted changes, and any open TODO/FIXME markers. Wire it as a
-SessionStart hook in Claude Code, or call it from whatever bootstrap step your
-harness runs.
+Three things to know:
+
+- **`|| true` is deliberate.** If the CLI is missing or fails, a session that
+  depends on it would otherwise error on every start. The brief is an
+  optimisation, not a prerequisite.
+- **Scope follows the file.** `~/.claude/settings.json` applies to all your
+  projects, `.claude/settings.json` to this project and is committable, and
+  `.claude/settings.local.json` to this project on this machine only.
+- **To re-inject after context compaction**, narrow it with a matcher:
+  `"matcher": "compact"`.
+
+SmritiFlow's own repository uses exactly this wiring, pointed at the local
+source rather than npm:
+
+```json
+"command": "npx tsx apps/cli/src/index.ts hook session-start || true"
+```
+
+### Other harnesses
+
+Any harness that runs a command at session start and feeds stdout to the model
+works. The brief is plain Markdown on stdout, and `--json` is available if you
+would rather parse the fields.
 
 ## What It Generates
 
@@ -97,6 +136,7 @@ an upgrade never silently reads a stale shape.
 ## Behavior Notes
 
 - **Content-fingerprint refresh**: `refresh` compares SHA-256 fingerprints of every hashable file against the previous run. Change detection therefore does not depend on git: repositories without git history, and repositories whose recorded commit was rewritten by a rebase, still detect edits correctly. Git supplies branch, commit, and recent-commit metadata only.
+- **Large repositories fall back to mtime+size**: above 20,000 hashable files, fingerprinting switches from SHA-256 to size and modification time, which is far cheaper. The weaker strategy cannot see an edit that preserves both size and mtime. The active strategy is recorded in `cache.json` as `hashStrategy` and shown by `smritiflow status`, so the guarantee in use is always discoverable rather than silent.
 - **Self-excluding output**: SmritiFlow never fingerprints its own generated files, so a scan cannot report its own output as a repository change.
 - **Targeted refresh**: a partial refresh re-runs only the analyzers whose inputs changed. Manifest changes, fingerprint-strategy changes, schema changes, and very large change sets fall back to a full scan.
 - **Idempotent scans**: consecutive scans of an unchanged repository produce identical artifacts. SmritiFlow's own output is excluded from the file tree and the layout analysis, so a scan never reports files that its own previous run created.
@@ -141,6 +181,9 @@ pnpm validate        # typecheck, tests, and build
 Individual commands: `pnpm dev`, `pnpm typecheck`, `pnpm test`, `pnpm build`, `pnpm check`.
 
 ## Releases
+
+See [CHANGELOG.md](CHANGELOG.md) for what changed in each version, including
+the breaking artifact-schema changes in 0.2.
 
 Releases publish to npm through the GitHub Actions workflow (OIDC trusted publishing with an `NPM_TOKEN` fallback):
 

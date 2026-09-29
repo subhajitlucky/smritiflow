@@ -26,7 +26,53 @@ export function inferActiveAreas(changedFiles: string[]): string[] {
   return uniqueSorted([...firstPass, ...secondPass]);
 }
 
-async function contentHashes(repoRoot: string, files: string[]): Promise<Record<string, string>> {
+/**
+ * Fingerprints a file by size and mtime instead of its contents. Far cheaper
+ * than reading every byte, but weaker: an edit that preserves both size and
+ * mtime is invisible. Every consumer therefore records which strategy produced
+ * a cache, so the weaker guarantee is at least discoverable.
+ */
+/**
+ * Fingerprints every hashable file in the tree, not just a fixed set of root
+ * manifests. Nested workspace packages and ordinary source files are the ones
+ * that used to be invisible to change detection outside of git.
+ */
+/**
+ * Fingerprints a file by its SHA-256 digest. The accurate strategy, and the
+ * reason change detection works without git history.
+ */
+/**
+ * Fingerprints a file by size and mtime instead of its contents. Far cheaper
+ * than reading every byte, but weaker: an edit that preserves both size and
+ * mtime is invisible. Every cache records which strategy produced it, so the
+ * weaker guarantee is at least discoverable.
+ */
+export async function statHashes(
+  repoRoot: string,
+  files: string[]
+): Promise<Record<string, string>> {
+  const hashes: Record<string, string> = {};
+
+  for (const file of files) {
+    try {
+      const stats = await fs.stat(path.join(repoRoot, file));
+      hashes[file] = `${stats.size}:${Math.round(stats.mtimeMs)}`;
+    } catch {
+      continue;
+    }
+  }
+
+  return hashes;
+}
+
+/**
+ * Fingerprints a file by its SHA-256 digest. The accurate strategy, and the
+ * reason change detection works without git history.
+ */
+export async function contentHashes(
+  repoRoot: string,
+  files: string[]
+): Promise<Record<string, string>> {
   const hashes: Record<string, string> = {};
 
   for (let index = 0; index < files.length; index += READ_BATCH_SIZE) {
@@ -52,33 +98,14 @@ async function contentHashes(repoRoot: string, files: string[]): Promise<Record<
   return hashes;
 }
 
-async function statHashes(repoRoot: string, files: string[]): Promise<Record<string, string>> {
-  const hashes: Record<string, string> = {};
-
-  for (const file of files) {
-    try {
-      const stats = await fs.stat(path.join(repoRoot, file));
-      hashes[file] = `${stats.size}:${Math.round(stats.mtimeMs)}`;
-    } catch {
-      continue;
-    }
-  }
-
-  return hashes;
-}
-
-/**
- * Fingerprints every hashable file in the tree, not just a fixed set of root
- * manifests. Nested workspace packages and ordinary source files are the ones
- * that used to be invisible to change detection outside of git.
- */
 export async function computeFileHashes(
   repoRoot: string,
-  files: string[]
+  files: string[],
+  contentLimit: number = CONTENT_HASH_FILE_LIMIT
 ): Promise<{ hashes: Record<string, string>; strategy: HashStrategy }> {
   const hashable = files.filter((file) => isHashablePath(file) && !isGeneratedPath(file));
 
-  if (hashable.length > CONTENT_HASH_FILE_LIMIT) {
+  if (hashable.length > contentLimit) {
     return { hashes: await statHashes(repoRoot, hashable), strategy: "stat" };
   }
 

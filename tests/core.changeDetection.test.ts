@@ -153,3 +153,77 @@ describe("refresh output formatting", () => {
     expect(refreshLines[0]).not.toContain("${");
   });
 });
+
+describe("stat hash fallback", () => {
+  it("switches to mtime+size above the content limit and still detects edits", async () => {
+    const dir = await createTempDir("smritiflow-stat-");
+
+    try {
+      await fs.outputFile(path.join(dir, "a.ts"), "export const a = 1;\n");
+      await fs.outputFile(path.join(dir, "b.ts"), "export const b = 1;\n");
+      const files = ["a.ts", "b.ts"];
+
+      const content = await computeFileHashes(dir, files, 10);
+      expect(content.strategy).toBe("content");
+
+      const stat = await computeFileHashes(dir, files, 1);
+      expect(stat.strategy).toBe("stat");
+      expect(Object.keys(stat.hashes).sort()).toEqual(["a.ts", "b.ts"]);
+
+      // An edit that changes the size must still register under the weak strategy.
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await fs.writeFile(path.join(dir, "a.ts"), "export const a = 999;\n");
+
+      const after = await computeFileHashes(dir, files, 1);
+      expect(diffHashes(stat.hashes, after.hashes).changed).toEqual(["a.ts"]);
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+
+  it("records the weaker strategy so it is discoverable", async () => {
+    const dir = await createTempDir("smritiflow-stat-strategy-");
+
+    try {
+      await fs.outputFile(path.join(dir, "a.ts"), "export const a = 1;\n");
+      const { strategy, hashes } = await computeFileHashes(dir, ["a.ts"], 0);
+
+      expect(strategy).toBe("stat");
+      // A stat hash is a size and mtime pair, not a digest.
+      expect(hashes["a.ts"]).toMatch(/^\d+:\d+$/);
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+
+  it("misses a same-size edit that preserves mtime, which is why the strategy is recorded", async () => {
+    const dir = await createTempDir("smritiflow-stat-weakness-");
+
+    try {
+      const target = path.join(dir, "a.ts");
+      await fs.outputFile(target, "export const a = 1;\n");
+
+      const before = await computeFileHashes(dir, ["a.ts"], 0);
+      const mtime = (await fs.stat(target)).mtime;
+
+      // Replace the contents without altering size, then restore the mtime.
+      await fs.writeFile(target, "export const a = 2;\n");
+      await fs.utimes(target, mtime, mtime);
+
+      const after = await computeFileHashes(dir, ["a.ts"], 0);
+      expect(diffHashes(before.hashes, after.hashes).changed).toEqual([]);
+
+      // Content hashing catches what the weak strategy cannot.
+      const strong = await computeFileHashes(dir, ["a.ts"], 100);
+      expect(diffHashes(before.strategy === "stat" ? strong.hashes : before.hashes, strong.hashes).changed).toEqual([]);
+      const strongChanged = await (async () => {
+        await fs.writeFile(target, "export const a = 3;\n");
+        const again = await computeFileHashes(dir, ["a.ts"], 100);
+        return diffHashes(strong.hashes, again.hashes).changed;
+      })();
+      expect(strongChanged).toEqual(["a.ts"]);
+    } finally {
+      await fs.remove(dir);
+    }
+  });
+});
