@@ -1,10 +1,11 @@
 # Current State
 
-- Generated at: 2026-09-29T10:55:41.654Z
+- Generated at: 2026-09-29T10:58:25.019Z
 - Branch: main
-- Commit: 7b2f7a43dfb956d3e7b27c65292780d713167e8e
+- Commit: f852d3b0d70d5f12f805e65c92bd5d3360f32540
 
 ## Recent Commits
+- f852d3b feat: wire the session hook, cover the stat fallback, add a changelog (#7)
 - 7b2f7a4 feat: version the machine-readable contract and enforce memory freshness (#6)
 - 17d7eac chore(release): describe the current CLI surface on npm (#5)
 - f5e95ca fix: correct output found by scanning twenty real repositories (#4)
@@ -12,23 +13,13 @@
 - 317e199 docs: add handoff preview from live scan run
 - 37c761f docs(readme): add badges, artifact table, and requirements (#2)
 - 9f4d7e0 ci(publish): authenticate with NPM_TOKEN so releases publish without trusted-publisher setup
-- 608f7cd Merge pull request #1 from subhajitlucky/fix/refresh-ignores-agents
 
 ## Changed Files
-- .claude/settings.json
-- CHANGELOG.md
-- packages/core/src/runStatus.ts
-- packages/core/src/scanMetadata.ts
-- README.md
-- tests/core.changeDetection.test.ts
+- apps/cli/src/index.ts
 
 ## Likely Active Areas
-- .claude
-- CHANGELOG.md
-- packages
-- packages/core
-- README.md
-- tests
+- apps
+- apps/cli
 
 ## Open Markers
 - 10 marker(s) across 6 file(s) [OPTIMIZE, TODO]

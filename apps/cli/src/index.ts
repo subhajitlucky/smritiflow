@@ -127,12 +127,15 @@ program
 
     if (asJson) {
       emit(result);
+    } else if (result.upToDate) {
+      console.log("Repository memory is up to date.");
+      console.log(`Not compared (point-in-time snapshots): ${result.skipped.join(", ")}`);
     } else {
-      console.log(result.upToDate ? "Repository memory is up to date." : "Repository memory has drifted:");
+      console.log("Repository memory has drifted:");
       for (const item of result.drift) {
         console.log(`- ${item.file}: ${item.reason}`);
       }
-      console.log(`Run \`smritiflow scan\` to regenerate, then commit the artifacts.`);
+      console.log("Run `smritiflow scan` to regenerate, then commit the artifacts.");
       console.log(`Not compared (point-in-time snapshots): ${result.skipped.join(", ")}`);
     }
 
