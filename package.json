@@ -16,16 +16,16 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
-    "@types/node": "^25.5.0",
-    "tsx": "^4.21.0",
+    "@types/node": "^25.9.9",
+    "tsx": "^4.23.15",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.0"
+    "vitest": "^4.1.11"
   },
   "dependencies": {
     "commander": "^14.0.3",
     "fast-glob": "^3.3.3",
-    "fs-extra": "^11.3.4",
-    "ignore": "^7.0.9",
-    "simple-git": "^3.33.0"
+    "fs-extra": "^11.4.1",
+    "ignore": "^7.0.12",
+    "simple-git": "^3.36.0"
   }
 }
