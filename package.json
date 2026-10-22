@@ -26,6 +26,6 @@
     "fast-glob": "^3.3.3",
     "fs-extra": "^11.4.1",
     "ignore": "^7.0.12",
-    "simple-git": "^3.36.0"
+    "simple-git": "^4.0.1"
   }
 }
